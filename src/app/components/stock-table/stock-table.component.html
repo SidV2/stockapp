@@ -1,0 +1,49 @@
+<section class="stock-table">
+  <h2>Watchlist</h2>
+  @if (watchlist$ | async; as rows) {
+    <div class="table-wrapper" role="region" aria-live="polite">
+      <table>
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Name</th>
+            <th class="num">Price</th>
+          <th class="num">Change</th>
+          <th class="num">% Change</th>
+          <th class="num">Market Cap</th>
+          <th class="num">Volume</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (q of rows; track q.symbol) {
+          <tr
+            [class.up]="q.change > 0"
+            [class.down]="q.change < 0"
+            role="button"
+            tabindex="0"
+            (click)="viewDetail(q.symbol)"
+            (keyup.enter)="viewDetail(q.symbol)"
+            [attr.aria-label]="'View details for ' + q.symbol">
+            <td>
+              <div class="symbol">
+                <div class="sym">{{ q.symbol }}</div>
+                <div class="spark-cell">
+                  <app-sparkline [values]="q.history || []" [stroke]="q.change >= 0 ? '#0a7d22' : '#b00020'" [width]="100" [height]="24"></app-sparkline>
+                </div>
+              </div>
+            </td>
+            <td class="name">{{ q.name }}</td>
+            <td class="num">{{ q.price | number:'1.2-2' }}</td>
+            <td class="num">{{ q.change | number:'1.2-2' }}</td>
+            <td class="num">{{ q.changePercent | number:'1.2-2' }}%</td>
+            <td class="num">{{ q.marketCap || 0 | number:'1.0-0' }}</td>
+            <td class="num">{{ q.volume || 0 | number:'1.0-0' }}</td>
+          </tr>
+        }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="loading">Loading watchlist…</div>
+  }
+</section>

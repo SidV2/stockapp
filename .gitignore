@@ -2,6 +2,7 @@
 
 # Compiled output
 /dist
+/dist-server
 /tmp
 /out-tsc
 /bazel-out
@@ -36,6 +37,10 @@ yarn-error.log
 /libpeerconnection.log
 testem.log
 /typings
+.env
+.env.local
+.env.development
+.env.production
 
 # System files
 .DS_Store

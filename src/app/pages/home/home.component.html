@@ -1,0 +1,14 @@
+<app-home-header></app-home-header>
+<div class="surface">
+  <div class="shell">
+    <app-search-panel></app-search-panel>
+    <section class="layout">
+      <app-home-primary-panel [topPicks$]="topPicks$" (selectStock)="viewDetail($event)"></app-home-primary-panel>
+      <app-home-secondary-panel
+        [results$]="results$"
+        [asOf$]="asOf$"
+        (selectStock)="viewDetail($event)"
+      ></app-home-secondary-panel>
+    </section>
+  </div>
+</div>

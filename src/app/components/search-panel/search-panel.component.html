@@ -1,0 +1,33 @@
+<section class="search-panel">
+  <div class="search" role="search" aria-label="Search stocks">
+    <svg class="search__icon" viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M12.9 12.3a6 6 0 1 0-.6.6l4 4a.5.5 0 0 0 .7-.7l-4.1-4zM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0z" />
+    </svg>
+    <input
+      type="text"
+      placeholder="Search stocks by name or ticker (e.g., AAPL)"
+      autocomplete="off"
+      [formControl]="queryControl"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      aria-haspopup="listbox"
+      [attr.aria-expanded]="isDropdownOpen"
+      aria-controls="search-dropdown"
+    />
+    @if (isDropdownOpen) {
+      <div id="search-dropdown" class="search-dropdown" role="listbox">
+        @for (suggestion of filteredSuggestions; track suggestion.symbol) {
+          <button
+            type="button"
+            class="search-dropdown__item"
+            role="option"
+            (mousedown)="$event.preventDefault()"
+            (click)="selectSuggestion(suggestion.symbol)">
+            <span class="search-dropdown__symbol">{{ suggestion.symbol }}</span>
+            <span class="search-dropdown__name">{{ suggestion.name }}</span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+</section>

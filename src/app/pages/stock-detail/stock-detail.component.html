@@ -1,0 +1,48 @@
+<div class="detail">
+  <nav class="detail__breadcrumb">
+    <a routerLink="/" class="breadcrumb__link">
+      <span aria-hidden="true">←</span>
+      Back to dashboard
+    </a>
+    @if (detail$ | async; as detail) {
+      <span class="breadcrumb__symbol">{{ detail.symbol }}</span>
+    }
+  </nav>
+
+  @let loading = loading$ | async;
+  @let detail = detail$ | async;
+  @let error = error$ | async;
+
+  @if (loading) {
+    <div class="detail__state detail__state--loading">Loading live market data…</div>
+  }
+
+  @if (!loading && error) {
+    <div class="detail__state detail__state--error">
+      <p>{{ error }}</p>
+      <button type="button" class="btn btn--primary" (click)="reload()">Retry</button>
+    </div>
+  }
+
+  @if (detail) {
+    <app-stock-hero
+      [detail]="detail"
+      [timeframes]="timeframes"
+      [selectedTimeframe]="selectedTimeframe"
+      (timeframeChange)="setTimeframe($event)"
+    ></app-stock-hero>
+
+    <section class="detail__grid">
+      <div class="detail__primary">
+        <app-about-panel
+          [company]="detail.company"
+          [description]="detail.description"
+        ></app-about-panel>
+
+        <app-latest-headlines
+          [news]="detail.news"
+        ></app-latest-headlines>
+      </div>
+    </section>
+  }
+</div>

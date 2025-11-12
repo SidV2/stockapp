@@ -1,0 +1,18 @@
+<div class="panel__header">
+  <h2>Latest Headlines</h2>
+  <a class="panel__see-all" href="#">View all</a>
+</div>
+
+@if (news.length === 0) {
+  <p class="placeholder">News coverage will be displayed here.</p>
+} @else {
+  <ul class="news-list">
+    @for (item of news; track item.id) {
+      <li class="news-list__item">
+        <span class="news-list__source">{{ item.source }} · {{ item.publishedAt | date:'MMM d, h:mm a' }}</span>
+        <h3 class="news-list__title">{{ item.title }}</h3>
+        <p class="news-list__excerpt">{{ item.excerpt }}</p>
+      </li>
+    }
+  </ul>
+}

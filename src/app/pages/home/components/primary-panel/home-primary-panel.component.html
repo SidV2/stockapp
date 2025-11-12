@@ -1,0 +1,49 @@
+<div class="layout__primary">
+  <div class="section-header">
+    <div class="section-header__title">
+      <h2>Top AI Picks</h2>
+      <button type="button" class="info-button" aria-label="Top picks information placeholder">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="10" cy="10" r="9" />
+          <rect x="9" y="7" width="2" height="6" rx="1" />
+          <rect x="9" y="5" width="2" height="2" rx="1" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="pick-grid">
+    @if (topPicks$ | async; as picks) {
+      @for (pick of picks; track pick.symbol) {
+        <article
+          class="pick-card"
+          [class.pick-card--up]="pick.trend === 'up'"
+          [class.pick-card--down]="pick.trend === 'down'"
+          role="button"
+          tabindex="0"
+          (click)="selectStock.emit(pick.symbol)"
+          (keyup.enter)="selectStock.emit(pick.symbol)"
+          [attr.aria-label]="'View details for ' + pick.symbol">
+          <header class="pick-card__header">
+            <div>
+              <div class="pick-card__symbol">{{ pick.symbol }}</div>
+              <div class="pick-card__company">{{ pick.company }}</div>
+            </div>
+            <span class="pick-card__badge" [attr.data-level]="pick.riskLevel">{{ pick.riskLevel }}</span>
+          </header>
+          <p class="pick-card__summary">{{ pick.summary }}</p>
+          <div class="pick-card__spark">
+            <app-sparkline
+              [values]="pick.sparkline"
+              [stroke]="pick.trend === 'up' ? '#16a34a' : '#dc2626'"
+              [height]="48"
+            ></app-sparkline>
+          </div>
+          <footer class="pick-card__disclaimer">Not investment advice.</footer>
+        </article>
+      }
+    } @else {
+      <div class="pick-grid__placeholder">Loading picks…</div>
+    }
+  </div>
+</div>

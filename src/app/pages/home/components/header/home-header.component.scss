@@ -1,0 +1,55 @@
+:host {
+  display: block;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: var(--bg-card, #ffffff);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
+}
+
+.preset-bar {
+  background: transparent;
+  border-bottom: 1px solid var(--border-subtle);
+  margin: 0;
+}
+
+.preset-bar__inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.mark {
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.04em;
+}
+
+.badge {
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  .preset-bar__inner {
+    padding: 0.85rem 1rem;
+  }
+}
