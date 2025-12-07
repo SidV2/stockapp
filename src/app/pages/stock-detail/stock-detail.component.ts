@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectionStrategy, DestroyRef, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter, distinctUntilChanged, map, tap } from 'rxjs/operators';
-import { Observable, timer } from 'rxjs';
+import { filter, distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { AboutPanelComponent } from '../../components/about-panel/about-panel.component';
 import { LatestHeadlinesComponent } from '../../components/latest-headlines/latest-headlines.component';
 import { StockHeroComponent } from '../../components/stock-hero/stock-hero.component';
@@ -24,7 +24,7 @@ import {
   styleUrl: './stock-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StockDetailComponent implements OnInit {
+export class StockDetailComponent {
   readonly detail$: Observable<StockDetail | null> = this.store.select(selectStockDetail);
   readonly loading$: Observable<boolean> = this.store.select(selectIsStockDetailLoading);
   readonly error$: Observable<string | null | undefined> = this.store.select(selectStockDetailError);
@@ -45,6 +45,7 @@ export class StockDetailComponent implements OnInit {
         filter((symbol): symbol is string => !!symbol),
         map((symbol) => symbol.toUpperCase()),
         distinctUntilChanged(),
+        shareReplay(1),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((symbol) => {
@@ -55,20 +56,6 @@ export class StockDetailComponent implements OnInit {
     this.destroyRef.onDestroy(() => {
       this.store.dispatch(StockActions.resetDetail());
     });
-  }
-
-  public ngOnInit() {
-    this.loadDetailEveryMinute();
-  }
-
-  public loadDetailEveryMinute() {
-    timer(0, 60000).pipe(
-      takeUntilDestroyed(this.destroyRef),
-      filter((symbol) => !!symbol),
-      tap(() => {
-        this.store.dispatch(StockActions.loadDetail({ symbol: this.currentSymbol! }));
-      })
-    ).subscribe()
   }
 
   reload(): void {

@@ -1,5 +1,5 @@
 import { createFeature, createReducer, on } from '@ngrx/store';
-import { StockDetail } from '../../models/stock.models';
+import { StockDetail, StockDetailUpdate } from '../../models/stock.models';
 import { StockActions } from './stock.actions';
 
 export const stockDetailFeatureKey = 'stockDetail';
@@ -18,6 +18,25 @@ const initialState: StockDetailState = {
   error: null
 };
 
+type IncomingStockDetail = StockDetail | StockDetailUpdate | { data: StockDetail | StockDetailUpdate };
+
+type WithData = { data: StockDetail | StockDetailUpdate };
+
+const hasData = (incoming: IncomingStockDetail): incoming is WithData => {
+  return typeof (incoming as WithData).data !== 'undefined' && (incoming as WithData).data !== null;
+};
+
+const pickPayload = (incoming: IncomingStockDetail): StockDetail | StockDetailUpdate =>
+  hasData(incoming) ? incoming.data : incoming;
+
+const normalizeStockDetail = (incoming: IncomingStockDetail, existing?: StockDetail): StockDetail => {
+  const raw = pickPayload(incoming);
+  const merged = { ...(existing ?? {}), ...raw } as Partial<StockDetail>;
+  const symbol = ('symbol' in raw ? raw.symbol : undefined) ?? existing?.symbol ?? '';
+  const updatedAt = ('updatedAt' in raw ? raw.updatedAt : undefined) ?? existing?.updatedAt ?? Date.now();
+  return { ...(merged as StockDetail), symbol, updatedAt };
+};
+
 export const stockDetailFeature = createFeature({
   name: stockDetailFeatureKey,
   reducer: createReducer(
@@ -30,10 +49,26 @@ export const stockDetailFeature = createFeature({
     })),
     on(StockActions.loadDetailSuccess, (state, { detail }): StockDetailState => ({
       ...state,
-      detail,
+      detail: normalizeStockDetail(detail),
       status: 'success',
       error: null
     })),
+    on(StockActions.liveQuoteUpdate, (state, { update }): StockDetailState => {
+      if (!state.detail) {
+        return state;
+      }
+      const normalized = normalizeStockDetail(update, state.detail);
+      if (normalized.symbol !== state.detail.symbol) {
+        return state;
+      }
+      if (state.detail.updatedAt && normalized.updatedAt < state.detail.updatedAt) {
+        return state;
+      }
+      return {
+        ...state,
+        detail: normalized
+      };
+    }),
     on(StockActions.loadDetailFailure, (state, { error }): StockDetailState => ({
       ...state,
       status: 'error',

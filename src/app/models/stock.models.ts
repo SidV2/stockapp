@@ -81,3 +81,6 @@ export interface StockDetail {
   historyIntervalMinutes?: number;
   updatedAt: number;
 }
+
+// Live updates may only include a subset of fields; symbol is filled client-side if absent.
+export type StockDetailUpdate = Partial<StockDetail> & { symbol?: string; updatedAt?: number };
