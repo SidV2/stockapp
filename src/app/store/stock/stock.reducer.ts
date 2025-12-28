@@ -61,9 +61,6 @@ export const stockDetailFeature = createFeature({
       if (normalized.symbol !== state.detail.symbol) {
         return state;
       }
-      if (state.detail.updatedAt && normalized.updatedAt < state.detail.updatedAt) {
-        return state;
-      }
       return {
         ...state,
         detail: normalized

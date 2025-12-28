@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, map, of, switchMap, takeUntil } from 'rxjs';
+import { bufferTime, catchError, filter, map, mergeMap, of, switchMap, takeUntil, tap } from 'rxjs';
 import { StockDetailService } from '../../services/stock-detail.service';
 import { QuoteStreamService } from '../../services/quote-stream.service';
 import { StockActions } from './stock.actions';
@@ -36,6 +36,14 @@ export class StockEffects {
       ofType(StockActions.loadDetailSuccess),
       switchMap(({ detail }) =>
         this.quoteStreamService.stream(detail.symbol).pipe(
+          bufferTime(200),
+          filter((batch) => batch.length > 0),
+          map((batch) =>
+            batch
+              .filter((u) => u && (u.symbol ?? detail.symbol) && (u.updatedAt ?? 0) > 0)
+              .sort((a, b) => (a.updatedAt ?? 0) - (b.updatedAt ?? 0))
+          ),
+          mergeMap((sorted) => sorted),
           map((update) =>
             StockActions.liveQuoteUpdate({
               update: { ...update, symbol: update.symbol ?? detail.symbol }
