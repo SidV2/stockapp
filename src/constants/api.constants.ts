@@ -6,5 +6,6 @@ const trimmedBase = (environment.apiBaseUrl || DEFAULT_API_BASE).replace(/\/$/, 
 
 export const apiBaseUrl = trimmedBase;
 export const stockDetailEndpoint = `${trimmedBase}/api/stocks`;
+export const stockHistoryEndpoint = stockDetailEndpoint;
 export const topPicksEndpoint = `${trimmedBase}/api/top-picks`;
 export const stockListEndpoint = stockDetailEndpoint;

@@ -32,7 +32,7 @@
   </div>
   <div class="hero__chart">
     <app-sparkline
-      [values]="detail?.history"
+      [values]="history ?? undefined"
       [width]="680"
       [height]="180"
       [stroke]="detail && detail.changePercent >= 0 ? '#16a34a' : '#dc2626'"

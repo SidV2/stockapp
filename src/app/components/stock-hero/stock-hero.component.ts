@@ -14,6 +14,7 @@ import { SparklineComponent } from '../sparkline/sparkline.component';
 export class StockHeroComponent {
   @Input({ required: true }) detail: StockDetail | undefined;
   @Input({ required: true }) selectedTimeframe: string | undefined;
+  @Input() history: number[] | null | undefined;
   @Input() timeframes: string[] = [];
 
   @Output() timeframeChange = new EventEmitter<string>();

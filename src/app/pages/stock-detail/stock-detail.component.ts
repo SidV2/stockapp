@@ -8,13 +8,15 @@ import { Observable } from 'rxjs';
 import { AboutPanelComponent } from '../../components/about-panel/about-panel.component';
 import { LatestHeadlinesComponent } from '../../components/latest-headlines/latest-headlines.component';
 import { StockHeroComponent } from '../../components/stock-hero/stock-hero.component';
-import { StockDetail } from '../../models/stock.models';
+import { HistoryRange, StockDetail, StockHistory } from '../../models/stock.models';
 import { StockActions } from '../../store/stock/stock.actions';
 import {
   selectIsStockDetailLoading,
   selectStockDetail,
   selectStockDetailError
 } from '../../store/stock/stock.selectors';
+import { StockHistoryActions } from '../../store/stock-history/stock-history.actions';
+import { selectStockHistory } from '../../store/stock-history/stock-history.selectors';
 
 @Component({
   selector: 'app-stock-detail',
@@ -28,8 +30,9 @@ export class StockDetailComponent {
   readonly detail$: Observable<StockDetail | null> = this.store.select(selectStockDetail);
   readonly loading$: Observable<boolean> = this.store.select(selectIsStockDetailLoading);
   readonly error$: Observable<string | null | undefined> = this.store.select(selectStockDetailError);
+  readonly history$: Observable<StockHistory | null> = this.store.select(selectStockHistory);
 
-  readonly timeframes = ['1D', '5D', '1M', '6M', '1Y', '5Y'];
+  readonly timeframes = ['Live', '1d', '5d', '1m', '6m', '1y', '5y'];
   selectedTimeframe = this.timeframes[0];
 
   private currentSymbol: string | null = null;
@@ -51,7 +54,12 @@ export class StockDetailComponent {
       .subscribe((symbol) => {
         this.currentSymbol = symbol;
         this.store.dispatch(StockActions.loadDetail({ symbol }));
+        this.setTimeframe(this.selectedTimeframe);
       });
+
+    this.history$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(history => {
+      console.log('Stock history:', history);
+    });
 
     this.destroyRef.onDestroy(() => {
       this.store.dispatch(StockActions.resetDetail());
@@ -66,5 +74,8 @@ export class StockDetailComponent {
 
   setTimeframe(range: string): void {
     this.selectedTimeframe = range;
+    if (this.currentSymbol && range !== 'Live') {
+      this.store.dispatch(StockHistoryActions.loadHistory({ symbol: this.currentSymbol, range: range as HistoryRange }));
+    }
   }
 }

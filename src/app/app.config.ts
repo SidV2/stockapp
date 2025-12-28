@@ -9,6 +9,8 @@ import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { routes } from './app.routes';
 import { StockEffects } from './store/stock/stock.effects';
 import { stockDetailFeatureName, stockDetailReducer } from './store/stock/stock.reducer';
+import { StockHistoryEffects } from './store/stock-history/stock-history.effects';
+import { stockHistoryFeatureName, stockHistoryReducer } from './store/stock-history/stock-history.reducer';
 import { TopPicksEffects } from './store/top-picks/top-picks.effects';
 import { topPicksFeatureName, topPicksReducer } from './store/top-picks/top-picks.reducer';
 
@@ -18,10 +20,11 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideStore({
       [stockDetailFeatureName]: stockDetailReducer,
-      [topPicksFeatureName]: topPicksReducer
+      [topPicksFeatureName]: topPicksReducer,
+      [stockHistoryFeatureName]: stockHistoryReducer
     }),
     provideRouterStore(),
-    provideEffects([StockEffects, TopPicksEffects]),
+    provideEffects([StockEffects, TopPicksEffects, StockHistoryEffects]),
     provideStoreDevtools({
       maxAge: 25,
       logOnly: !isDevMode()
