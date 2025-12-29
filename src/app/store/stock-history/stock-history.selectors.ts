@@ -15,3 +15,8 @@ export const selectIsStockHistoryLoaded = createSelector(
   selectStockHistoryStatus,
   (status) => status === 'success'
 );
+
+export const selectIsHistoryLoading = createSelector(
+  selectStockHistoryStatus,
+  (status) => status === 'loading'
+);

@@ -56,11 +56,7 @@ export class StockDetailComponent {
         this.store.dispatch(StockActions.loadDetail({ symbol }));
         this.setTimeframe(this.selectedTimeframe);
       });
-
-    this.history$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(history => {
-      console.log('Stock history:', history);
-    });
-
+      
     this.destroyRef.onDestroy(() => {
       this.store.dispatch(StockActions.resetDetail());
     });
