@@ -54,16 +54,26 @@ export const stockDetailFeature = createFeature({
       error: null
     })),
     on(StockActions.liveQuoteUpdate, (state, { update }): StockDetailState => {
-      if (!state.detail) {
+      if (!state.detail || !update.price || !state.detail.previousClose) {
         return state;
       }
       const normalized = normalizeStockDetail(update, state.detail);
       if (normalized.symbol !== state.detail.symbol) {
         return state;
       }
+
+      const newHistory = [...(state.detail.history ?? []), normalized.price];
+      const newChange = normalized.price - state.detail.previousClose;
+      const newChangePercent = state.detail.previousClose !== 0 ? (newChange / state.detail.previousClose) * 100 : 0;
+
       return {
         ...state,
-        detail: normalized
+        detail: {
+          ...normalized,
+          change: newChange,
+          changePercent: newChangePercent,
+          history: newHistory,
+        },
       };
     }),
     on(StockActions.loadDetailFailure, (state, { error }): StockDetailState => ({

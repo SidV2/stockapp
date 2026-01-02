@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { bufferTime, catchError, filter, map, mergeMap, of, switchMap, takeUntil, tap } from 'rxjs';
+import { bufferTime, catchError, filter, map, mergeMap, of, switchMap, takeUntil } from 'rxjs';
 import { StockDetailService } from '../../services/stock-detail.service';
 import { QuoteStreamService } from '../../services/quote-stream.service';
 import { StockActions } from './stock.actions';
+import { StockDetailUpdate } from '../../models/stock.models';
 
 @Injectable()
 export class StockEffects {
@@ -36,6 +37,7 @@ export class StockEffects {
       ofType(StockActions.loadDetailSuccess),
       switchMap(({ detail }) =>
         this.quoteStreamService.stream(detail.symbol).pipe(
+          map((quote) => ({ symbol: quote.symbol, price: quote.price, updatedAt: quote.timestamp } as StockDetailUpdate)),
           bufferTime(200),
           filter((batch) => batch.length > 0),
           map((batch) =>
