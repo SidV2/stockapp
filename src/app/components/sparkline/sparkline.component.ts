@@ -17,38 +17,62 @@ export class SparklineComponent implements OnChanges {
 
   path = '';
   private readonly smoothing = 0.18;
+  
+  // Cache these values to avoid recalculation
+  private cachedMin = 0;
+  private cachedMax = 0;
+  private cachedValuesLength = 0;
 
-  ngOnChanges(_: SimpleChanges): void {
-    if(this.values && this.values.length)
-    this.path = this.generatePath(this.values, this.width, this.height);
+  ngOnChanges(changes: SimpleChanges): void {
+    if (this.values && this.values.length) {
+      // Only regenerate if values actually changed
+      const valuesChanged = changes['values']?.currentValue !== changes['values']?.previousValue;
+      const dimensionsChanged = changes['width'] || changes['height'];
+      
+      if (valuesChanged || dimensionsChanged) {
+        this.path = this.generatePath(this.values, this.width, this.height);
+      }
+    }
   }
 
   private generatePath(values: number[], width: number, height: number): string {
     if (!values || values.length === 0) return '';
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min || 1;
+    
+    // Use cached min/max if length hasn't changed (for incremental updates)
+    if (values.length !== this.cachedValuesLength) {
+      this.cachedMin = Math.min(...values);
+      this.cachedMax = Math.max(...values);
+      this.cachedValuesLength = values.length;
+    }
+    
+    const range = this.cachedMax - this.cachedMin || 1;
     const stepX = width / Math.max(values.length - 1, 1);
 
-    const points = values.map((v, i) => {
-      const x = i * stepX;
-      const y = height - ((v - min) / range) * height;
-      return { x, y };
-    });
+    // Pre-allocate array for better performance
+    const points = new Array(values.length);
+    for (let i = 0; i < values.length; i++) {
+      points[i] = {
+        x: i * stepX,
+        y: height - ((values[i] - this.cachedMin) / range) * height
+      };
+    }
 
-    return points.reduce((path, point, index, arr) => {
-      if (index === 0) {
-        return `M ${point.x} ${point.y}`;
-      }
-
-      const previous = arr[index - 1];
-      const previousPrevious = arr[index - 2];
-      const next = arr[index + 1];
+    // Build path string more efficiently using array join
+    const pathParts: string[] = [`M ${points[0].x} ${points[0].y}`];
+    
+    for (let i = 1; i < points.length; i++) {
+      const point = points[i];
+      const previous = points[i - 1];
+      const previousPrevious = points[i - 2];
+      const next = points[i + 1];
+      
       const controlPointStart = this.getControlPoint(previous, previousPrevious, point);
       const controlPointEnd = this.getControlPoint(point, previous, next, true);
-
-      return `${path} C ${controlPointStart.x} ${controlPointStart.y} ${controlPointEnd.x} ${controlPointEnd.y} ${point.x} ${point.y}`;
-    }, '');
+      
+      pathParts.push(`C ${controlPointStart.x} ${controlPointStart.y} ${controlPointEnd.x} ${controlPointEnd.y} ${point.x} ${point.y}`);
+    }
+    
+    return pathParts.join(' ');
   }
 
   private getControlPoint(

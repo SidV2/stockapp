@@ -2,6 +2,13 @@ svg {
   display: block;
   width: 100%;
   overflow: visible;
+  
+  path {
+    // Simple, smooth graph transitions without spring effect
+    transition: d 0.4s ease-in-out,
+                stroke 0.3s ease-out;
+    will-change: d, stroke;
+  }
 }
 
 :host {
