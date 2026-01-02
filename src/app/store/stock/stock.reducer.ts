@@ -8,12 +8,14 @@ export type StockDetailStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export interface StockDetailState {
   detail: StockDetail | null;
+  liveUpdate: StockDetailUpdate | null;
   status: StockDetailStatus;
   error: string | null;
 }
 
 const initialState: StockDetailState = {
   detail: null,
+  liveUpdate: null,
   status: 'idle',
   error: null
 };
@@ -44,12 +46,14 @@ export const stockDetailFeature = createFeature({
     on(StockActions.resetDetail, () => initialState),
     on(StockActions.loadDetail, (state): StockDetailState => ({
       ...state,
+      liveUpdate: null,
       status: 'loading',
       error: null
     })),
     on(StockActions.loadDetailSuccess, (state, { detail }): StockDetailState => ({
       ...state,
       detail: normalizeStockDetail(detail),
+      liveUpdate: null,
       status: 'success',
       error: null
     })),
@@ -57,23 +61,12 @@ export const stockDetailFeature = createFeature({
       if (!state.detail || !update.price || !state.detail.previousClose) {
         return state;
       }
-      const normalized = normalizeStockDetail(update, state.detail);
-      if (normalized.symbol !== state.detail.symbol) {
+      if (update.symbol !== state.detail.symbol) {
         return state;
       }
-
-      const newHistory = [...(state.detail.history ?? []), normalized.price];
-      const newChange = normalized.price - state.detail.previousClose;
-      const newChangePercent = state.detail.previousClose !== 0 ? (newChange / state.detail.previousClose) * 100 : 0;
-
       return {
         ...state,
-        detail: {
-          ...normalized,
-          change: newChange,
-          changePercent: newChangePercent,
-          history: newHistory,
-        },
+        liveUpdate: update,
       };
     }),
     on(StockActions.loadDetailFailure, (state, { error }): StockDetailState => ({
@@ -90,5 +83,6 @@ export const {
   selectStockDetailState,
   selectDetail,
   selectStatus,
-  selectError
+  selectError,
+  selectLiveUpdate,
 } = stockDetailFeature;

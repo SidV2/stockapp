@@ -29,7 +29,7 @@
       [detail]="detail"
       [timeframes]="timeframes"
       [selectedTimeframe]="selectedTimeframe"
-      [history]="selectedTimeframe === 'Live' ? detail.history : (history$ | async)?.history"
+      [history]="selectedTimeframe === 'Live' || selectedTimeframe === '1d' ? detail.history : (history$ | async)?.history"
       (timeframeChange)="setTimeframe($event)"
     ></app-stock-hero>
 

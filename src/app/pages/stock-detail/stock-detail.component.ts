@@ -12,8 +12,8 @@ import { HistoryRange, StockDetail, StockHistory } from '../../models/stock.mode
 import { StockActions } from '../../store/stock/stock.actions';
 import {
   selectIsStockDetailLoading,
-  selectStockDetail,
-  selectStockDetailError
+  selectLiveStock,
+  selectStockDetailError,
 } from '../../store/stock/stock.selectors';
 import { StockHistoryActions } from '../../store/stock-history/stock-history.actions';
 import { selectStockHistory } from '../../store/stock-history/stock-history.selectors';
@@ -27,7 +27,7 @@ import { selectStockHistory } from '../../store/stock-history/stock-history.sele
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StockDetailComponent {
-  readonly detail$: Observable<StockDetail | null> = this.store.select(selectStockDetail);
+  readonly detail$: Observable<StockDetail | null> = this.store.select(selectLiveStock);
   readonly loading$: Observable<boolean> = this.store.select(selectIsStockDetailLoading);
   readonly error$: Observable<string | null | undefined> = this.store.select(selectStockDetailError);
   readonly history$: Observable<StockHistory | null> = this.store.select(selectStockHistory);

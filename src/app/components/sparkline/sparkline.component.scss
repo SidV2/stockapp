@@ -1,5 +1,11 @@
 svg {
   display: block;
   width: 100%;
+  overflow: visible;
+}
+
+:host {
+  display: block;
+  overflow: visible;
 }
 
