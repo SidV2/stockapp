@@ -17,6 +17,7 @@ import {
 } from '../../store/stock/stock.selectors';
 import { StockHistoryActions } from '../../store/stock-history/stock-history.actions';
 import { selectStockHistory } from '../../store/stock-history/stock-history.selectors';
+import { QuoteStreamService, ConnectionStatus } from '../../services/quote-stream.service';
 
 @Component({
   selector: 'app-stock-detail',
@@ -31,6 +32,7 @@ export class StockDetailComponent {
   readonly loading$: Observable<boolean> = this.store.select(selectIsStockDetailLoading);
   readonly error$: Observable<string | null | undefined> = this.store.select(selectStockDetailError);
   readonly history$: Observable<StockHistory | null> = this.store.select(selectStockHistory);
+  readonly connectionStatus$: Observable<ConnectionStatus> = this.quoteStreamService.getConnectionStatus();
 
   readonly timeframes = ['Live', '1d', '5d', '1m', '6m', '1y', '5y'];
   selectedTimeframe = this.timeframes[0];
@@ -40,7 +42,8 @@ export class StockDetailComponent {
   constructor(
     private readonly store: Store,
     private readonly route: ActivatedRoute,
-    private readonly destroyRef: DestroyRef
+    private readonly destroyRef: DestroyRef,
+    private readonly quoteStreamService: QuoteStreamService
   ) {
     this.route.paramMap
       .pipe(

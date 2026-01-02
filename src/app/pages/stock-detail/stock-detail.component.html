@@ -7,6 +7,20 @@
     @if (detail$ | async; as detail) {
       <span class="breadcrumb__symbol">{{ detail.symbol }}</span>
     }
+    
+    @if (selectedTimeframe === 'Live') {
+      <div class="connection-status" [attr.data-status]="connectionStatus$ | async">
+        <span class="status-dot"></span>
+        <span class="status-text">
+          @switch (connectionStatus$ | async) {
+            @case ('connected') { Live }
+            @case ('reconnecting') { Reconnecting... }
+            @case ('error') { Connection Error }
+            @default { Connecting... }
+          }
+        </span>
+      </div>
+    }
   </nav>
 
   @let loading = loading$ | async;
