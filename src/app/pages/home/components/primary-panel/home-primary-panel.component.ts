@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { Observable } from 'rxjs';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { StockPick } from '../../../../models/stock.models';
 import { SparklineComponent } from '../../../../components/sparkline/sparkline.component';
 
@@ -13,6 +12,6 @@ import { SparklineComponent } from '../../../../components/sparkline/sparkline.c
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomePrimaryPanelComponent {
-  @Input({ required: true }) topPicks$!: Observable<StockPick[]>;
-  @Output() selectStock = new EventEmitter<string>();
+  readonly topPicks = input.required<StockPick[]>();
+  readonly selectStock = output<string>();
 }

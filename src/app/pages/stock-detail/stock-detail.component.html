@@ -4,15 +4,15 @@
       <span aria-hidden="true">←</span>
       Back to dashboard
     </a>
-    @if (detail$ | async; as detail) {
+    @if (detail(); as detail) {
       <span class="breadcrumb__symbol">{{ detail.symbol }}</span>
     }
     
-    @if (selectedTimeframe === 'Live') {
-      <div class="connection-status" [attr.data-status]="connectionStatus$ | async">
+    @if (selectedTimeframe() === 'Live') {
+      <div class="connection-status" [attr.data-status]="connectionStatus()">
         <span class="status-dot"></span>
         <span class="status-text">
-          @switch (connectionStatus$ | async) {
+          @switch (connectionStatus()) {
             @case ('connected') { Live }
             @case ('reconnecting') { Reconnecting... }
             @case ('error') { Connection Error }
@@ -23,27 +23,23 @@
     }
   </nav>
 
-  @let loading = loading$ | async;
-  @let detail = detail$ | async;
-  @let error = error$ | async;
-
-  @if (loading) {
+  @if (loading()) {
     <div class="detail__state detail__state--loading">Loading live market data…</div>
   }
 
-  @if (!loading && error) {
+  @if (!loading() && error(); as error) {
     <div class="detail__state detail__state--error">
       <p>{{ error }}</p>
       <button type="button" class="btn btn--primary" (click)="reload()">Retry</button>
     </div>
   }
 
-  @if (detail) {
+  @if (detail(); as detail) {
     <app-stock-hero
       [detail]="detail"
       [timeframes]="timeframes"
-      [selectedTimeframe]="selectedTimeframe"
-      [history]="selectedTimeframe === 'Live' || selectedTimeframe === '1d' ? detail.history : (history$ | async)?.history"
+      [selectedTimeframe]="selectedTimeframe()"
+      [history]="selectedTimeframe() === 'Live' || selectedTimeframe() === '1d' ? detail.history : history()?.history"
       (timeframeChange)="setTimeframe($event)"
     ></app-stock-hero>
 

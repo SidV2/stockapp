@@ -41,46 +41,38 @@ export class QuoteStreamService {
    * Connect to the quote stream for a symbol with automatic reconnection.
    */
   public stream(symbol: string): Observable<QuoteUpdate> {
-    // Close existing connection
-    if (this.socket) {
-      this.socket.complete();
-      this.socket = undefined;
-    }
-
-    // Reset reconnect attempts when starting a new connection
-    this.reconnectAttempts = 0;
+    // Close existing connection and reset state
+    this.disconnect();
     
     return this.createWebSocketConnection(symbol).pipe(
-      filter((message) => message.type === 'stockQuote'),
-      map((message) => ({
+      filter(message => message.type === 'stockQuote'),
+      map(message => ({
         symbol: message.symbol,
         price: message.data.price,
         timestamp: message.data.timestamp,
       })),
       tap(() => {
-        // Successfully received data
         if (this.connectionStatus$.value !== 'connected') {
           this.connectionStatus$.next('connected');
-          this.reconnectAttempts = 0; // Reset on successful connection
+          this.reconnectAttempts = 0;
         }
       }),
-      retryWhen((errors) => 
+      retryWhen(errors => 
         errors.pipe(
-          tap((error) => {
+          tap(error => {
             console.warn('WebSocket error, attempting reconnect:', error);
             this.reconnectAttempts++;
             
             if (this.reconnectAttempts >= this.maxReconnectAttempts) {
               this.connectionStatus$.next('error');
               throw new Error('Max reconnection attempts reached');
-            } else {
-              this.connectionStatus$.next('reconnecting');
             }
+            
+            this.connectionStatus$.next('reconnecting');
           }),
           delayWhen(() => {
-            // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s (max)
             const delay = Math.min(
-              this.baseReconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
+              this.baseReconnectDelay * (2 ** (this.reconnectAttempts - 1)),
               this.maxReconnectDelay
             );
             console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
@@ -88,7 +80,7 @@ export class QuoteStreamService {
           })
         )
       ),
-      catchError((error) => {
+      catchError(error => {
         console.error('Fatal WebSocket error:', error);
         this.connectionStatus$.next('error');
         throw error;
@@ -110,8 +102,10 @@ export class QuoteStreamService {
   }
 
   private createWebSocketConnection(symbol: string): Observable<StockQuoteMessage> {
+    const wsUrl = apiBaseUrl.replace(/^http/, 'ws');
+    
     this.socket = webSocket<StockQuoteMessage>({
-      url: this.buildUrl(symbol),
+      url: `${wsUrl}/ws/quotes?symbol=${encodeURIComponent(symbol)}`,
       openObserver: {
         next: () => {
           console.log(`WebSocket connected for ${symbol}`);
@@ -130,10 +124,5 @@ export class QuoteStreamService {
     });
 
     return this.socket.asObservable();
-  }
-
-  private buildUrl(symbol: string): string {
-    const wsBase = apiBaseUrl.replace(/^http/, 'ws');
-    return `${wsBase}/ws/quotes?symbol=${encodeURIComponent(symbol)}`;
   }
 }

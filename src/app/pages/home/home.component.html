@@ -3,10 +3,10 @@
   <div class="shell">
     <app-search-panel></app-search-panel>
     <section class="layout">
-      <app-home-primary-panel [topPicks$]="topPicks$" (selectStock)="viewDetail($event)"></app-home-primary-panel>
+      <app-home-primary-panel [topPicks]="topPicks()" (selectStock)="viewDetail($event)"></app-home-primary-panel>
       <app-home-secondary-panel
-        [results$]="results$"
-        [asOf$]="asOf$"
+        [results]="results()"
+        [asOf]="asOf()"
         (selectStock)="viewDetail($event)"
       ></app-home-secondary-panel>
     </section>

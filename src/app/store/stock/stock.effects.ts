@@ -38,7 +38,7 @@ export class StockEffects {
       switchMap(({ detail }) =>
         this.quoteStreamService.stream(detail.symbol).pipe(
           map((quote) => ({ symbol: quote.symbol, price: quote.price, updatedAt: quote.timestamp } as StockDetailUpdate)),
-          bufferTime(1500),
+          bufferTime(1000), // 1 second for responsive real-time updates
           filter((batch) => batch.length > 0),
           map((batch) =>
             batch

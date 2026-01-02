@@ -1,5 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectionStrategy, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, effect, input } from '@angular/core';
+
+interface Point {
+  x: number;
+  y: number;
+}
 
 @Component({
   selector: 'app-sparkline',
@@ -9,82 +14,70 @@ import { Component, ChangeDetectionStrategy, Input, OnChanges, SimpleChanges } f
   styleUrls: ['./sparkline.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SparklineComponent implements OnChanges {
-  @Input() values: number[] | undefined = [];
-  @Input() width = 120;
-  @Input() height = 32;
-  @Input() stroke = '#0a7d22';
+export class SparklineComponent {
+  // Modern signal inputs
+  readonly values = input<number[] | undefined>([]);
+  readonly width = input<number>(120);
+  readonly height = input<number>(32);
+  readonly stroke = input<string>('#0a7d22');
 
-  path = '';
   private readonly smoothing = 0.18;
-  
-  // Cache these values to avoid recalculation
-  private cachedMin = 0;
-  private cachedMax = 0;
-  private cachedValuesLength = 0;
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (this.values && this.values.length) {
-      // Only regenerate if values actually changed
-      const valuesChanged = changes['values']?.currentValue !== changes['values']?.previousValue;
-      const dimensionsChanged = changes['width'] || changes['height'];
-      
-      if (valuesChanged || dimensionsChanged) {
-        this.path = this.generatePath(this.values, this.width, this.height);
-      }
-    }
-  }
+  // Computed signal for path generation
+  readonly path = computed(() => this.generatePath());
 
-  private generatePath(values: number[], width: number, height: number): string {
+  private generatePath(): string {
+    const values = this.values();
+    const width = this.width();
+    const height = this.height();
+
     if (!values || values.length === 0) return '';
-    
-    // Use cached min/max if length hasn't changed (for incremental updates)
-    if (values.length !== this.cachedValuesLength) {
-      this.cachedMin = Math.min(...values);
-      this.cachedMax = Math.max(...values);
-      this.cachedValuesLength = values.length;
-    }
-    
-    const range = this.cachedMax - this.cachedMin || 1;
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
     const stepX = width / Math.max(values.length - 1, 1);
 
     // Pre-allocate array for better performance
-    const points = new Array(values.length);
+    const points: Point[] = new Array(values.length);
     for (let i = 0; i < values.length; i++) {
       points[i] = {
         x: i * stepX,
-        y: height - ((values[i] - this.cachedMin) / range) * height
+        y: height - ((values[i] - min) / range) * height
       };
     }
 
-    // Build path string more efficiently using array join
+    // Build path string efficiently
     const pathParts: string[] = [`M ${points[0].x} ${points[0].y}`];
-    
+
     for (let i = 1; i < points.length; i++) {
       const point = points[i];
       const previous = points[i - 1];
       const previousPrevious = points[i - 2];
       const next = points[i + 1];
-      
+
       const controlPointStart = this.getControlPoint(previous, previousPrevious, point);
       const controlPointEnd = this.getControlPoint(point, previous, next, true);
-      
-      pathParts.push(`C ${controlPointStart.x} ${controlPointStart.y} ${controlPointEnd.x} ${controlPointEnd.y} ${point.x} ${point.y}`);
+
+      pathParts.push(
+        `C ${controlPointStart.x} ${controlPointStart.y} ${controlPointEnd.x} ${controlPointEnd.y} ${point.x} ${point.y}`
+      );
     }
-    
+
     return pathParts.join(' ');
   }
 
   private getControlPoint(
-    current: { x: number; y: number },
-    previous?: { x: number; y: number },
-    next?: { x: number; y: number },
+    current: Point,
+    previous: Point | undefined,
+    next: Point | undefined,
     reverse = false
-  ): { x: number; y: number } {
+  ): Point {
     const p = previous ?? current;
     const n = next ?? current;
     const angle = Math.atan2(n.y - p.y, n.x - p.x) + (reverse ? Math.PI : 0);
     const length = Math.hypot(n.x - p.x, n.y - p.y) * this.smoothing;
+    
     return {
       x: current.x + Math.cos(angle) * length,
       y: current.y + Math.sin(angle) * length

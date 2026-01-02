@@ -1,11 +1,16 @@
+@let w = width();
+@let h = height();
+@let p = path();
+@let s = stroke();
+
 <svg
   width="100%"
-  [attr.height]="height"
-  [attr.viewBox]="'0 0 ' + width + ' ' + height"
+  [attr.height]="h"
+  [attr.viewBox]="'0 0 ' + w + ' ' + h"
   preserveAspectRatio="none"
   role="img"
   aria-label="sparkline"
 >
-  <path [attr.d]="path" [attr.stroke]="stroke" fill="none" stroke-width="2" stroke-linecap="round" />
+  <path [attr.d]="p" [attr.stroke]="s" fill="none" stroke-width="2" stroke-linecap="round" />
 </svg>
 

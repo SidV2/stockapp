@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { Observable } from 'rxjs';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { StockResult } from '../../../../models/stock.models';
 
 @Component({
@@ -12,7 +11,7 @@ import { StockResult } from '../../../../models/stock.models';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomeSecondaryPanelComponent {
-  @Input({ required: true }) results$!: Observable<StockResult[]>;
-  @Input({ required: true }) asOf$!: Observable<number>;
-  @Output() selectStock = new EventEmitter<string>();
+  readonly results = input.required<StockResult[]>();
+  readonly asOf = input.required<number | undefined>();
+  readonly selectStock = output<string>();
 }

@@ -1,29 +1,42 @@
+@let currentDetail = detail();
+@let price = displayPrice();
+@let change = displayChange();
+@let changePercent = displayChangePercent();
+@let updatedAt = displayUpdatedAt();
+@let history = sparklineHistory();
+@let width = chartWidth();
+@let timeframe = selectedTimeframe();
+
 <section class="hero">
   <div class="hero__header">
     <div class="hero__identity">
-      <span class="hero__symbol">{{ detail?.symbol }}</span>
-      <span class="hero__company">{{ detail?.company }}</span>
+      <span class="hero__symbol">{{ currentDetail?.symbol }}</span>
+      <span class="hero__company">{{ currentDetail?.company }}</span>
     </div>
   </div>
   <div class="hero__quote">
     <div class="hero__price">
-      <span>{{ displayPrice | number:'1.2-2' }}</span>
+      <span>{{ price | number:'1.2-2' }}</span>
       <span class="hero__currency">USD</span>
     </div>
-    <div class="hero__change" [class.hero__change--up]="displayChangePercent != null && displayChangePercent >= 0" [class.hero__change--down]="displayChangePercent != null && displayChangePercent < 0">
+    <div class="hero__change" 
+         [class.hero__change--up]="changePercent != null && changePercent >= 0" 
+         [class.hero__change--down]="changePercent != null && changePercent < 0">
       <svg viewBox="0 0 12 12" aria-hidden="true">
         <path d="M6 1 11 6 9.6 7.4 6.9 4.7v6.3H5.1V4.7L2.4 7.4 1 6z" />
       </svg>
-      <span>{{ displayChange | number:'1.2-2' }} ({{ displayChangePercent | number:'1.2-2' }}%)</span>
+      <span>{{ change | number:'1.2-2' }} ({{ changePercent | number:'1.2-2' }}%)</span>
     </div>
-    <div class="hero__timestamp">{{ selectedTimeframe === 'Live' ? 'Updated' : 'As of' }} {{ displayUpdatedAt | date:'MMM d, y h:mm a' }}</div>
+    <div class="hero__timestamp">
+      {{ timeframe === 'Live' ? 'Updated' : 'As of' }} {{ updatedAt | date:'MMM d, y h:mm a' }}
+    </div>
   </div>
   <div class="hero__timeframes">
-    @for (range of timeframes; track range) {
+    @for (range of timeframes(); track range) {
       <button
         type="button"
         class="chip"
-        [class.chip--active]="range === selectedTimeframe"
+        [class.chip--active]="range === timeframe"
         (click)="onTimeframeSelect(range)"
       >
         {{ range }}
@@ -32,11 +45,11 @@
   </div>
   <div class="hero__chart" #chartContainer>
     <app-sparkline
-      [values]="sparklineHistory"
-      [width]="chartWidth"
+      [values]="history"
+      [width]="width"
       [height]="180"
-      [stroke]="displayChangePercent != null && displayChangePercent >= 0 ? '#16a34a' : '#dc2626'"
+      [stroke]="changePercent != null && changePercent >= 0 ? '#16a34a' : '#dc2626'"
     />
   </div>
-  <p class="hero__summary">{{ detail?.summary }}</p>
+  <p class="hero__summary">{{ currentDetail?.summary }}</p>
 </section>

@@ -4,8 +4,9 @@
       <h2>Results</h2>
     </div>
     <ul class="results-list">
-      @if (results$ | async; as results) {
-        @for (result of results; track result.symbol) {
+      @let resultsList = results();
+      @if (resultsList.length > 0) {
+        @for (result of resultsList; track result.symbol) {
           <li
             class="results-list__item"
             [class.is-positive]="result.changePercent >= 0"
@@ -37,7 +38,7 @@
     </ul>
     <footer class="results-card__footer">
       <p>Educational only. Not investment advice.</p>
-      <p>Data as of {{ (asOf$ | async) | date:'MMM d, y h:mm a z' }}</p>
+      <p>Data as of {{ asOf() | date:'MMM d, y h:mm a z' }}</p>
     </footer>
   </div>
 </aside>
