@@ -1,0 +1,131 @@
+<div class="advisor">
+  <div class="advisor__header">
+    <h2 class="advisor__title">
+      AI Trading Signal
+    </h2>
+    <button 
+      type="button" 
+      class="advisor__refresh"
+      (click)="analyzeStock()"
+      [disabled]="isAnalyzing()"
+      title="Refresh analysis"
+    >
+      <span [class.spinning]="isAnalyzing()">↻</span>
+    </button>
+  </div>
+
+  @if (isAnalyzing()) {
+    <div class="advisor__shimmer">
+      <!-- Shimmer Signal Badge -->
+      <div class="shimmer-signal-badge">
+        <div class="shimmer-icon shimmer-animate"></div>
+        <div class="shimmer-content">
+          <div class="shimmer-line shimmer-line--large shimmer-animate"></div>
+          <div class="shimmer-line shimmer-line--small shimmer-animate"></div>
+        </div>
+        <div class="shimmer-confidence shimmer-animate"></div>
+      </div>
+
+      <!-- Shimmer Sections -->
+      <div class="shimmer-section">
+        <div class="shimmer-line shimmer-line--title shimmer-animate"></div>
+        <div class="shimmer-line shimmer-line--medium shimmer-animate"></div>
+        <div class="shimmer-line shimmer-line--medium shimmer-animate"></div>
+        <div class="shimmer-line shimmer-line--short shimmer-animate"></div>
+      </div>
+
+      <div class="shimmer-section">
+        <div class="shimmer-line shimmer-line--title shimmer-animate"></div>
+        <div class="shimmer-factor shimmer-animate"></div>
+        <div class="shimmer-factor shimmer-animate"></div>
+        <div class="shimmer-factor shimmer-animate"></div>
+      </div>
+
+      <div class="shimmer-meta">
+        <div class="shimmer-meta-item shimmer-animate"></div>
+        <div class="shimmer-meta-item shimmer-animate"></div>
+        <div class="shimmer-meta-item shimmer-animate"></div>
+      </div>
+    </div>
+  }
+
+  @if (!isAnalyzing() && error(); as errorMsg) {
+    <div class="advisor__error">
+      <p>{{ errorMsg }}</p>
+      <button type="button" class="btn btn--primary" (click)="analyzeStock()">
+        Try Again
+      </button>
+    </div>
+  }
+
+  @if (!isAnalyzing() && analysis(); as result) {
+    <div class="advisor__content">
+      <!-- Signal Badge -->
+      <div class="signal-badge" [ngClass]="signalClass()">
+        <div class="signal-badge__icon">
+          {{ getSignalIcon(result.signal) }}
+        </div>
+        <div class="signal-badge__content">
+          <div class="signal-badge__label">{{ getSignalLabel(result.signal) }}</div>
+          <div class="signal-badge__stock">{{ stockDetail.symbol }}</div>
+        </div>
+        <div class="signal-badge__confidence" [ngClass]="confidenceColor()">
+          <div class="confidence-value">{{ result.confidence }}%</div>
+          <div class="confidence-label">Confidence</div>
+        </div>
+      </div>
+
+      <!-- Reasoning -->
+      <div class="advisor__section">
+        <h3 class="section-title">AI Analysis</h3>
+        <p class="reasoning">{{ result.reasoning }}</p>
+      </div>
+
+      <!-- Key Factors -->
+      <div class="advisor__section">
+        <h3 class="section-title">Key Factors</h3>
+        <ul class="factors-list">
+          @for (factor of result.keyFactors; track factor) {
+            <li class="factor-item">
+              <span class="factor-bullet">▸</span>
+              {{ factor }}
+            </li>
+          }
+        </ul>
+      </div>
+
+      <!-- Additional Info -->
+      <div class="advisor__meta">
+        <div class="meta-item">
+          <span class="meta-label">Time Horizon</span>
+          <span class="meta-value meta-value--horizon">
+            {{ result.timeHorizon | titlecase }}
+          </span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Risk Level</span>
+          <span class="meta-value" [attr.data-risk]="result.riskLevel">
+            {{ getRiskIcon(result.riskLevel) }} {{ result.riskLevel }}
+          </span>
+        </div>
+        @if (result.targetPrice) {
+          <div class="meta-item">
+            <span class="meta-label">Target Price</span>
+            <span class="meta-value meta-value--price">
+              ${{ result.targetPrice.toFixed(2) }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="advisor__disclaimer">
+        <small>
+          <strong>NOT FINANCIAL ADVICE</strong>: This analysis is for educational purposes only. We are not licensed financial advisors. 
+          Do not use this as the sole basis for investment decisions. Consult with a qualified, licensed financial professional before investing. 
+          See LEGAL-DISCLAIMER.md for full terms.
+        </small>
+      </div>
+    </div>
+  }
+</div>
