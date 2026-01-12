@@ -29,6 +29,21 @@ export class StockHeroComponent implements OnInit {
   private readonly MAX_LIVE_HISTORY = 200;
   readonly chartWidth = signal(680);
   private readonly resize$ = new Subject<void>();
+  
+  // Animated values for smooth transitions
+  readonly animatedPrice = signal<number | undefined>(undefined);
+  readonly animatedChange = signal<number | undefined>(undefined);
+  readonly animatedChangePercent = signal<number | undefined>(undefined);
+  
+  // Separate animation frame IDs for each property
+  private priceAnimationId?: number;
+  private changeAnimationId?: number;
+  private changePercentAnimationId?: number;
+  
+  // Track target values to avoid re-triggering animations
+  private targetPrice?: number;
+  private targetChange?: number;
+  private targetChangePercent?: number;
 
   // Computed values using signals - cleaner than getters
   readonly displayPrice = computed(() => {
@@ -68,9 +83,7 @@ export class StockHeroComponent implements OnInit {
     const timeframe = this.selectedTimeframe();
     
     if (timeframe === 'Live') {
-      const liveHist = this.liveHistory();
-      console.log('[StockHero] sparklineHistory for Live:', liveHist.length, 'points');
-      return liveHist;
+      return this.liveHistory();
     }
     if (timeframe === '1d') {
       return this.detail()?.history;
@@ -88,6 +101,23 @@ export class StockHeroComponent implements OnInit {
       observeOn(animationFrameScheduler),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => this.updateChartWidth());
+    
+    // Watch for price changes and trigger animation
+    effect(() => {
+      this.handlePriceChange(this.displayPrice());
+    }, { allowSignalWrites: true });
+    
+    // Watch for change value and trigger animation
+    effect(() => {
+      const newChange = this.displayChange();
+      this.handleChangeUpdate(newChange);
+    }, { allowSignalWrites: true });
+    
+    // Watch for change percent and trigger animation
+    effect(() => {
+      const newPercent = this.displayChangePercent();
+      this.handleChangePercentUpdate(newPercent);
+    }, { allowSignalWrites: true });
 
     // Use effect to handle live history updates
     effect(() => {
@@ -101,7 +131,6 @@ export class StockHeroComponent implements OnInit {
       if (isNewSymbol) {
         // Initialize or reset history for new symbol
         const initialHistory = detail.history ?? [];
-        console.log('[StockHero] Initializing live history for', detail.symbol, 'with', initialHistory.length, 'points');
         this.liveHistory.set(initialHistory.slice(-this.MAX_LIVE_HISTORY));
         this.previousSymbol = detail.symbol;
       } else {
@@ -117,7 +146,6 @@ export class StockHeroComponent implements OnInit {
               ? updated.slice(-this.MAX_LIVE_HISTORY)
               : updated
           );
-          console.log('[StockHero] Added new price', detail.price, 'total points:', this.liveHistory().length);
         }
       }
     }, { allowSignalWrites: true });
@@ -130,7 +158,12 @@ export class StockHeroComponent implements OnInit {
     resizeObserver.observe(this.elementRef.nativeElement);
     
     // Cleanup
-    this.destroyRef.onDestroy(() => resizeObserver.disconnect());
+    this.destroyRef.onDestroy(() => {
+      resizeObserver.disconnect();
+      if (this.priceAnimationId) cancelAnimationFrame(this.priceAnimationId);
+      if (this.changeAnimationId) cancelAnimationFrame(this.changeAnimationId);
+      if (this.changePercentAnimationId) cancelAnimationFrame(this.changePercentAnimationId);
+    });
     
     // Initial width calculation
     setTimeout(() => this.updateChartWidth(), 0);
@@ -138,6 +171,71 @@ export class StockHeroComponent implements OnInit {
 
   onTimeframeSelect(range: string): void {
     this.timeframeChange.emit(range);
+  }
+
+  private handlePriceChange(newPrice: number | undefined): void {
+    if (newPrice !== undefined && newPrice !== this.targetPrice) {
+      const currentPrice = this.animatedPrice();
+      
+      if (currentPrice === undefined) {
+        // First time - set immediately without animation
+        this.animatedPrice.set(newPrice);
+        this.targetPrice = newPrice;
+      } else {
+        // Use the previous target as starting point if we had one (smooth transition)
+        const startValue = this.targetPrice ?? currentPrice;
+        this.targetPrice = newPrice;
+        this.animateValue(
+          startValue, 
+          newPrice, 
+          (val: number) => this.animatedPrice.set(val),
+          this.priceAnimationId,
+          (id) => this.priceAnimationId = id
+        );
+      }
+    }
+  }
+
+  private handleChangeUpdate(newChange: number | undefined): void {
+    if (newChange !== undefined && newChange !== this.targetChange) {
+      const currentChange = this.animatedChange();
+      
+      if (currentChange === undefined) {
+        this.animatedChange.set(newChange);
+        this.targetChange = newChange;
+      } else {
+        const startValue = this.targetChange ?? currentChange;
+        this.targetChange = newChange;
+        this.animateValue(
+          startValue, 
+          newChange, 
+          (val: number) => this.animatedChange.set(val),
+          this.changeAnimationId,
+          (id) => this.changeAnimationId = id
+        );
+      }
+    }
+  }
+
+  private handleChangePercentUpdate(newPercent: number | undefined): void {
+    if (newPercent !== undefined && newPercent !== this.targetChangePercent) {
+      const currentPercent = this.animatedChangePercent();
+      
+      if (currentPercent === undefined) {
+        this.animatedChangePercent.set(newPercent);
+        this.targetChangePercent = newPercent;
+      } else {
+        const startValue = this.targetChangePercent ?? currentPercent;
+        this.targetChangePercent = newPercent;
+        this.animateValue(
+          startValue, 
+          newPercent, 
+          (val: number) => this.animatedChangePercent.set(val),
+          this.changePercentAnimationId,
+          (id) => this.changePercentAnimationId = id
+        );
+      }
+    }
   }
 
   private updateChartWidth(): void {
@@ -156,5 +254,43 @@ export class StockHeroComponent implements OnInit {
     
     this.chartWidth.set(width);
     this.cdr.markForCheck();
+  }
+  
+  private animateValue(
+    from: number, 
+    to: number, 
+    setter: (val: number) => void,
+    currentId: number | undefined,
+    setId: (id: number | undefined) => void,
+    duration: number = 350
+  ): void {
+    // Cancel any existing animation for this specific property
+    if (currentId) {
+      cancelAnimationFrame(currentId);
+    }
+    
+    const startTime = performance.now();
+    
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Ease-out cubic for smooth deceleration
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      const current = from + (to - from) * easeProgress;
+      
+      setter(current);
+      
+      // Trigger change detection for OnPush strategy
+      this.cdr.markForCheck();
+      
+      if (progress < 1) {
+        setId(requestAnimationFrame(animate));
+      } else {
+        setId(undefined);
+      }
+    };
+    
+    setId(requestAnimationFrame(animate));
   }
 }

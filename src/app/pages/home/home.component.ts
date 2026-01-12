@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { SearchPanelComponent } from '../../components/search-panel/search-panel.component';
 import { HomePrimaryPanelComponent } from './components/primary-panel/home-primary-panel.component';
-import { HomeSecondaryPanelComponent } from './components/secondary-panel/home-secondary-panel.component';
 import { HomeHeaderComponent } from './components/header/home-header.component';
 import { TopPicksActions } from '../../store/top-picks/top-picks.actions';
 import { selectTopPicks } from '../../store/top-picks/top-picks.selectors';
@@ -18,7 +17,6 @@ import { HomeMarketService } from '../../services/home-market.service';
     CommonModule,
     SearchPanelComponent,
     HomePrimaryPanelComponent,
-    HomeSecondaryPanelComponent,
     HomeHeaderComponent
   ],
   templateUrl: './home.component.html',
