@@ -154,19 +154,24 @@ export class StockHeroComponent implements OnInit {
   private previousSymbol?: string;
 
   ngOnInit(): void {
-    const resizeObserver = new ResizeObserver(() => this.resize$.next());
-    resizeObserver.observe(this.elementRef.nativeElement);
-    
-    // Cleanup
-    this.destroyRef.onDestroy(() => {
-      resizeObserver.disconnect();
-      if (this.priceAnimationId) cancelAnimationFrame(this.priceAnimationId);
-      if (this.changeAnimationId) cancelAnimationFrame(this.changeAnimationId);
-      if (this.changePercentAnimationId) cancelAnimationFrame(this.changePercentAnimationId);
-    });
-    
-    // Initial width calculation
-    setTimeout(() => this.updateChartWidth(), 0);
+    // Initial width calculation and setup resize observer
+    setTimeout(() => {
+      this.updateChartWidth();
+      
+      // Observe the chart container specifically for more accurate resize detection
+      if (this.chartContainer) {
+        const resizeObserver = new ResizeObserver(() => this.resize$.next());
+        resizeObserver.observe(this.chartContainer.nativeElement);
+        
+        // Cleanup
+        this.destroyRef.onDestroy(() => {
+          resizeObserver.disconnect();
+          if (this.priceAnimationId) cancelAnimationFrame(this.priceAnimationId);
+          if (this.changeAnimationId) cancelAnimationFrame(this.changeAnimationId);
+          if (this.changePercentAnimationId) cancelAnimationFrame(this.changePercentAnimationId);
+        });
+      }
+    }, 0);
   }
 
   onTimeframeSelect(range: string): void {

@@ -1,6 +1,8 @@
 svg {
   display: block;
   width: 100%;
+  max-width: 100%;
+  height: auto;
   overflow: visible;
   
   path {
@@ -13,6 +15,9 @@ svg {
 
 :host {
   display: block;
+  width: 100%;
+  max-width: 100%;
+  padding: 1rem 0;
   overflow: visible;
 }
 
