@@ -42,6 +42,9 @@ testem.log
 .env.development
 .env.production
 
+# Secret keys and API credentials
+src/environments/environment.secrets.ts
+
 # System files
 .DS_Store
 Thumbs.db

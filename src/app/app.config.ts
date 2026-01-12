@@ -13,6 +13,8 @@ import { StockHistoryEffects } from './store/stock-history/stock-history.effects
 import { stockHistoryFeatureName, stockHistoryReducer } from './store/stock-history/stock-history.reducer';
 import { TopPicksEffects } from './store/top-picks/top-picks.effects';
 import { topPicksFeatureName, topPicksReducer } from './store/top-picks/top-picks.reducer';
+import { AiAdvisorEffects } from './store/ai-advisor/ai-advisor.effects';
+import { aiAdvisorFeatureName, aiAdvisorReducer } from './store/ai-advisor/ai-advisor.reducer';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,10 +23,11 @@ export const appConfig: ApplicationConfig = {
     provideStore({
       [stockDetailFeatureName]: stockDetailReducer,
       [topPicksFeatureName]: topPicksReducer,
-      [stockHistoryFeatureName]: stockHistoryReducer
+      [stockHistoryFeatureName]: stockHistoryReducer,
+      [aiAdvisorFeatureName]: aiAdvisorReducer
     }),
     provideRouterStore(),
-    provideEffects([StockEffects, TopPicksEffects, StockHistoryEffects]),
+    provideEffects([StockEffects, TopPicksEffects, StockHistoryEffects, AiAdvisorEffects]),
     provideStoreDevtools({
       maxAge: 25,
       logOnly: !isDevMode()

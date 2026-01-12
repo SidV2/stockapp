@@ -1,5 +1,20 @@
 # StockApp
 
+⚠️ **IMPORTANT LEGAL NOTICE**
+
+**This application is for EDUCATIONAL and PERSONAL USE ONLY.**
+
+- ❌ NOT licensed to provide financial advice
+- ❌ NOT for commercial use or resale
+- ❌ NOT intended for managing others' investments
+- ✅ FOR learning, research, and personal portfolio tracking only
+
+**See [LEGAL-DISCLAIMER.md](LEGAL-DISCLAIMER.md) for complete legal terms.**
+
+By using this app, you acknowledge that we are not financial advisors and this is not financial advice. Always consult with licensed professionals before making investment decisions.
+
+---
+
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.0.4.
 
 ## Development server

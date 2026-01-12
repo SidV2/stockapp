@@ -8,6 +8,7 @@ import { filter, distinctUntilChanged, map, tap } from 'rxjs/operators';
 import { AboutPanelComponent } from '../../components/about-panel/about-panel.component';
 import { LatestHeadlinesComponent } from '../../components/latest-headlines/latest-headlines.component';
 import { StockHeroComponent } from '../../components/stock-hero/stock-hero.component';
+import { StockSignalAdvisorComponent } from '../../components/stock-signal-advisor/stock-signal-advisor.component';
 import { HistoryRange } from '../../models/stock.models';
 import { StockActions } from '../../store/stock/stock.actions';
 import { selectIsStockDetailLoading, selectLiveStock, selectStockDetailError } from '../../store/stock/stock.selectors';
@@ -18,7 +19,7 @@ import { QuoteStreamService } from '../../services/quote-stream.service';
 @Component({
   selector: 'app-stock-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, StockHeroComponent, AboutPanelComponent, LatestHeadlinesComponent],
+  imports: [CommonModule, RouterModule, StockHeroComponent, AboutPanelComponent, LatestHeadlinesComponent, StockSignalAdvisorComponent],
   templateUrl: './stock-detail.component.html',
   styleUrl: './stock-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

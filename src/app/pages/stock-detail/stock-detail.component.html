@@ -45,6 +45,10 @@
 
     <section class="detail__grid">
       <div class="detail__primary">
+        <app-stock-signal-advisor
+          [stockDetail]="detail"
+        ></app-stock-signal-advisor>
+
         <app-about-panel
           [company]="detail.company"
           [description]="detail.description"
