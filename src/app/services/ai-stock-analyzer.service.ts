@@ -24,11 +24,7 @@ export class AiStockAnalyzerService {
   constructor(private http: HttpClient) {}
 
   analyzeStock(stockDetail: StockDetail): Observable<StockAnalysis> {
-    // Use fallback analysis if no AI provider is configured
-    if (this.aiProvider === 'fallback') {
-      console.info('Using fallback heuristic analysis. Configure AI provider in environment.secrets.ts for AI-powered analysis.');
-      return of(this.getFallbackAnalysis(stockDetail));
-    }
+    // All providers require configuration now (no fallback mode)
 
     const prompt = this.buildAnalysisPrompt(stockDetail);
 
@@ -40,7 +36,7 @@ export class AiStockAnalyzerService {
       case 'gemini':
         return this.analyzeWithGemini(prompt, stockDetail);
       default:
-        return of(this.getFallbackAnalysis(stockDetail));
+        return throwError(() => new Error('Invalid AI provider configured'));
     }
   }
 
@@ -58,21 +54,20 @@ export class AiStockAnalyzerService {
         console.log('✅ OpenAI analysis received');
         return response;
       }),
-      catchError(error => {
-        console.error('❌ OpenAI Proxy Error:', error);
+      this.handleAiError('OpenAI', (error) => {
         if (error.status === 0) {
-          console.warn('⚠️ Proxy server not running. Start it with: node scripts/ai-proxy-server.js');
+          return 'Proxy server not running. Start it with: npm run proxy';
+        } else if (error.status === 401) {
+          return 'Invalid OpenAI API key. Please check your .env file';
         }
-        console.log('↩️ Falling back to heuristic analysis');
-        return of(this.getFallbackAnalysis(stockDetail));
+        return null; // Use default error message
       })
     );
   }
 
   private analyzeWithAnthropic(prompt: string, stockDetail: StockDetail): Observable<StockAnalysis> {
     if (!secrets.anthropic.apiKey) {
-      console.warn('Anthropic API key not configured. Using fallback analysis.');
-      return of(this.getFallbackAnalysis(stockDetail));
+      return throwError(() => new Error('Anthropic API key not configured. Please add your key to environment.secrets.ts'));
     }
 
     const headers = new HttpHeaders({
@@ -97,17 +92,13 @@ export class AiStockAnalyzerService {
         const content = response.content[0].text;
         return JSON.parse(content) as StockAnalysis;
       }),
-      catchError(error => {
-        console.error('Anthropic Analysis Error:', error);
-        return of(this.getFallbackAnalysis(stockDetail));
-      })
+      this.handleAiError('Anthropic')
     );
   }
 
   private analyzeWithGemini(prompt: string, stockDetail: StockDetail): Observable<StockAnalysis> {
     if (!secrets.gemini.apiKey) {
-      console.warn('Gemini API key not configured. Using fallback analysis.');
-      return of(this.getFallbackAnalysis(stockDetail));
+      return throwError(() => new Error('Gemini API key not configured. Please add your key to environment.secrets.ts'));
     }
 
     const body = {
@@ -129,10 +120,7 @@ export class AiStockAnalyzerService {
         const content = response.candidates[0].content.parts[0].text;
         return JSON.parse(content) as StockAnalysis;
       }),
-      catchError(error => {
-        console.error('Gemini Analysis Error:', error);
-        return of(this.getFallbackAnalysis(stockDetail));
-      })
+      this.handleAiError('Gemini')
     );
   }
 
@@ -185,82 +173,28 @@ Provide your analysis in the following JSON format:
 }`;
   }
 
-  private getFallbackAnalysis(stock: StockDetail): StockAnalysis {
-    // Simple heuristic-based fallback when AI is not available
-    const priceChange = stock.changePercent * 100;
-    const volumeRatio = stock.avgVolume > 0 ? stock.volume / stock.avgVolume : 1;
-    const fiftyTwoWeekPosition = ((stock.price - stock.week52Range[0]) / (stock.week52Range[1] - stock.week52Range[0])) * 100;
-    
-    let score = 0;
-    const factors: string[] = [];
-
-    // Price momentum
-    if (priceChange > 2) {
-      score += 2;
-      factors.push('Strong positive momentum');
-    } else if (priceChange > 0) {
-      score += 1;
-      factors.push('Positive momentum');
-    } else if (priceChange < -2) {
-      score -= 2;
-      factors.push('Strong negative momentum');
-    } else if (priceChange < 0) {
-      score -= 1;
-      factors.push('Negative momentum');
-    }
-
-    // Volume analysis
-    if (volumeRatio > 1.5) {
-      score += 1;
-      factors.push('High trading volume');
-    } else if (volumeRatio < 0.5) {
-      score -= 1;
-      factors.push('Low trading volume');
-    }
-
-    // 52-week position
-    if (fiftyTwoWeekPosition > 80) {
-      score -= 1;
-      factors.push('Near 52-week high (potential resistance)');
-    } else if (fiftyTwoWeekPosition < 20) {
-      score += 1;
-      factors.push('Near 52-week low (potential support)');
-    }
-
-    // P/E Ratio analysis
-    if (stock.peRatio > 0 && stock.peRatio < 15) {
-      score += 1;
-      factors.push('Attractive P/E ratio');
-    } else if (stock.peRatio > 30) {
-      score -= 1;
-      factors.push('High P/E ratio (potentially overvalued)');
-    }
-
-    let signal: 'BUY' | 'SELL' | 'HOLD';
-    let confidence: number;
-    let reasoning: string;
-
-    if (score >= 2) {
-      signal = 'BUY';
-      confidence = Math.min(70 + (score * 5), 85);
-      reasoning = 'Multiple positive indicators suggest potential upside. Consider entering a position with proper risk management.';
-    } else if (score <= -2) {
-      signal = 'SELL';
-      confidence = Math.min(70 + (Math.abs(score) * 5), 85);
-      reasoning = 'Multiple negative indicators suggest potential downside. Consider reducing exposure or waiting for better entry points.';
-    } else {
-      signal = 'HOLD';
-      confidence = 60;
-      reasoning = 'Mixed signals in the current market conditions. Wait for clearer directional indicators before taking action.';
-    }
-
-    return {
-      signal,
-      confidence,
-      reasoning,
-      keyFactors: factors.length > 0 ? factors : ['Neutral market conditions'],
-      timeHorizon: 'short-term',
-      riskLevel: Math.abs(score) > 3 ? 'High' : Math.abs(score) > 1 ? 'Medium' : 'Low'
-    };
+  /**
+   * Shared error handler for AI provider requests
+   * @param provider - Name of the AI provider (for logging)
+   * @param customErrorFn - Optional function to provide custom error messages based on error object
+   */
+  private handleAiError(
+    provider: string,
+    customErrorFn?: (error: any) => string | null
+  ): (source: Observable<StockAnalysis>) => Observable<StockAnalysis> {
+    return catchError((error: any) => {
+      console.error(`❌ ${provider} Error:`, error);
+      
+      // Try custom error message first
+      const customMessage = customErrorFn?.(error);
+      
+      // Fall back to standard error extraction
+      const errorMessage = customMessage 
+        || error.error?.error?.message 
+        || error.error?.error 
+        || `Failed to get AI analysis from ${provider}`;
+      
+      return throwError(() => new Error(errorMessage));
+    });
   }
 }

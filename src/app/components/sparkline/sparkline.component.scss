@@ -6,10 +6,10 @@ svg {
   overflow: visible;
   
   path {
-    // Simple, smooth graph transitions without spring effect
-    transition: d 0.4s ease-in-out,
-                stroke 0.3s ease-out;
-    will-change: d, stroke;
+    // Animations handled by requestAnimationFrame for better performance
+    // Smooth stroke color transitions
+    transition: stroke 0.3s ease-out;
+    will-change: stroke;
   }
 }
 

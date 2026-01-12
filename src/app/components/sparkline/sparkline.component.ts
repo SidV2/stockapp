@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectionStrategy, computed, effect, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef, computed, effect, input, signal } from '@angular/core';
 
 interface Point {
   x: number;
@@ -22,16 +22,48 @@ export class SparklineComponent {
   readonly stroke = input<string>('#0a7d22');
 
   private readonly smoothing = 0.18;
+  
+  // Animated path signal for smooth transitions
+  readonly path = signal<string>('');
+  
+  // Track animation state
+  private animationId?: number;
+  private previousPoints: Point[] = [];
+  private targetPoints: Point[] = [];
+  
+  // Computed signal for target path generation
+  private readonly targetPath = computed(() => this.generatePath());
 
-  // Computed signal for path generation
-  readonly path = computed(() => this.generatePath());
+  constructor(
+    private readonly cdr: ChangeDetectorRef,
+    private readonly destroyRef: DestroyRef
+  ) {
+    // Watch for changes in target path and animate
+    effect(() => {
+      const newPath = this.targetPath();
+      const newPoints = this.generatePoints();
+      
+      if (newPoints.length > 0) {
+        this.animateToNewPath(newPoints);
+      } else {
+        this.path.set('');
+      }
+    }, { allowSignalWrites: true });
+    
+    // Cleanup on destroy
+    this.destroyRef.onDestroy(() => {
+      if (this.animationId) {
+        cancelAnimationFrame(this.animationId);
+      }
+    });
+  }
 
-  private generatePath(): string {
+  private generatePoints(): Point[] {
     const values = this.values();
     const width = this.width();
     const height = this.height();
 
-    if (!values || values.length === 0) return '';
+    if (!values || values.length === 0) return [];
 
     const min = Math.min(...values);
     const max = Math.max(...values);
@@ -47,8 +79,20 @@ export class SparklineComponent {
       };
     }
 
+    return points;
+  }
+
+  private generatePath(): string {
+    const points = this.generatePoints();
+    if (points.length === 0) return '';
+    return this.pointsToPath(points);
+  }
+  
+  private pointsToPath(points: Point[]): string {
+    if (points.length === 0) return '';
+    
     // Build path string efficiently
-    const pathParts: string[] = [`M ${points[0].x} ${points[0].y}`];
+    const pathParts: string[] = [`M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`];
 
     for (let i = 1; i < points.length; i++) {
       const point = points[i];
@@ -60,11 +104,84 @@ export class SparklineComponent {
       const controlPointEnd = this.getControlPoint(point, previous, next, true);
 
       pathParts.push(
-        `C ${controlPointStart.x} ${controlPointStart.y} ${controlPointEnd.x} ${controlPointEnd.y} ${point.x} ${point.y}`
+        `C ${controlPointStart.x.toFixed(2)} ${controlPointStart.y.toFixed(2)} ${controlPointEnd.x.toFixed(2)} ${controlPointEnd.y.toFixed(2)} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`
       );
     }
 
     return pathParts.join(' ');
+  }
+  
+  private animateToNewPath(newPoints: Point[]): void {
+    // Cancel any existing animation
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+    }
+    
+    // If no previous points, set immediately
+    if (this.previousPoints.length === 0) {
+      this.previousPoints = newPoints;
+      this.targetPoints = newPoints;
+      this.path.set(this.pointsToPath(newPoints));
+      this.cdr.markForCheck();
+      return;
+    }
+    
+    // Store target points
+    this.targetPoints = newPoints;
+    
+    // Animate from previous to target
+    const startTime = performance.now();
+    const duration = 400; // ms
+    
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Ease-out cubic for smooth deceleration
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      
+      // Interpolate points
+      const interpolatedPoints = this.interpolatePoints(
+        this.previousPoints,
+        this.targetPoints,
+        easeProgress
+      );
+      
+      // Generate and set path
+      this.path.set(this.pointsToPath(interpolatedPoints));
+      
+      // Trigger change detection for OnPush strategy
+      this.cdr.markForCheck();
+      
+      if (progress < 1) {
+        this.animationId = requestAnimationFrame(animate);
+      } else {
+        this.previousPoints = this.targetPoints;
+        this.animationId = undefined;
+      }
+    };
+    
+    this.animationId = requestAnimationFrame(animate);
+  }
+  
+  private interpolatePoints(from: Point[], to: Point[], progress: number): Point[] {
+    // Handle different array lengths by padding or truncating
+    const maxLength = Math.max(from.length, to.length);
+    const minLength = Math.min(from.length, to.length);
+    
+    const result: Point[] = new Array(to.length);
+    
+    for (let i = 0; i < to.length; i++) {
+      const fromPoint = from[i] ?? to[i];
+      const toPoint = to[i];
+      
+      result[i] = {
+        x: fromPoint.x + (toPoint.x - fromPoint.x) * progress,
+        y: fromPoint.y + (toPoint.y - fromPoint.y) * progress
+      };
+    }
+    
+    return result;
   }
 
   private getControlPoint(

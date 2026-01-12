@@ -29,6 +29,7 @@ export const secrets = {
   }
 };
 
-// Choose which AI provider to use: 'openai', 'anthropic', 'gemini', or 'fallback'
-// 'fallback' uses heuristic analysis and requires no API key
-export const AI_PROVIDER: 'openai' | 'anthropic' | 'gemini' | 'fallback' = 'fallback';
+// Choose which AI provider to use: 'openai', 'anthropic', or 'gemini'
+// OpenAI requires proxy server (http://localhost:3001) to bypass CORS
+// Make sure to run: npm run proxy in a separate terminal
+export const AI_PROVIDER: 'openai' | 'anthropic' | 'gemini' = 'openai';

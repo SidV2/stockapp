@@ -3,6 +3,8 @@ import { Observable } from 'rxjs';
 import { StockDetail } from '../models/stock.models';
 import { HttpClient } from '@angular/common/http';
 import { stockDetailEndpoint } from '../../constants/api.constants';
+import { normalizeStockSymbol } from '../utils/stock.utils';
+
 /**
  * Minimal scaffold for the stock detail data flow.
  *
@@ -24,15 +26,7 @@ export class StockDetailService {
    * @returns 
    */
   getStockDetail(symbol: string): Observable<StockDetail> {
-    const normalized = this.normalizeSymbol(symbol);
+    const normalized = normalizeStockSymbol(symbol);
     return this.httpClient.get<StockDetail>(`${stockDetailEndpoint}/${normalized}/detail`);
-  }
-
-  private normalizeSymbol(symbol: string): string {
-    const trimmed = symbol.trim().toUpperCase();
-    if (!trimmed) {
-      throw new Error('Symbol is required');
-    }
-    return trimmed;
   }
 }
