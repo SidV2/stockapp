@@ -1,5 +1,5 @@
 import { createFeature, createReducer, on } from '@ngrx/store';
-import { StockPick } from '../../models/stock.models';
+import { StockPick } from '../../models';
 import { TopPicksActions } from './top-picks.actions';
 
 export const topPicksFeatureKey = 'topPicks';

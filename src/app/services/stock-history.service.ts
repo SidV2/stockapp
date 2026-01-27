@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { stockHistoryEndpoint } from '../../constants/api.constants';
-import { StockHistory, HistoryRange } from '../models/stock.models';
+import { HistoryRange, StockHistory } from '../models';
 import { normalizeStockSymbol } from '../utils/stock.utils';
 
 @Injectable({ providedIn: 'root' })

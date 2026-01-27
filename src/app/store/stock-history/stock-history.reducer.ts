@@ -1,5 +1,5 @@
 import { createFeature, createReducer, on } from '@ngrx/store';
-import { StockHistory } from '../../models/stock.models';
+import { StockHistory } from '../../models';
 import { StockHistoryActions } from './stock-history.actions';
 
 export const stockHistoryFeatureKey = 'stockHistory';

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { StockPick } from '../../../../models/stock.models';
+import { StockPick } from '../../../../models';
 import { SparklineComponent } from '../../../../components/sparkline/sparkline.component';
 
 @Component({

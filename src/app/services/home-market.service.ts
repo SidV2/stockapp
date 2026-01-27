@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { StockResult } from '../models/stock.models';
+import { StockResult } from '../models';
 
 const BASE_RESULTS: StockResult[] = [
   {

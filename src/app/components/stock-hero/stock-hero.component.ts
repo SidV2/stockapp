@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, Destro
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { animationFrameScheduler, Subject } from 'rxjs';
 import { observeOn } from 'rxjs/operators';
-import { StockDetail } from '../../models/stock.models';
+import { StockDetail } from '../../models';
 import { SparklineComponent } from '../sparkline/sparkline.component';
 
 @Component({

@@ -1,5 +1,5 @@
 import { createFeature, createReducer, on } from '@ngrx/store';
-import { StockAnalysis } from '../../services/ai-stock-analyzer.service';
+import { StockAnalysis } from '../../models';
 import { AiAdvisorActions } from './ai-advisor.actions';
 
 export interface AiAdvisorState {

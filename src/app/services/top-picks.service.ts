@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { topPicksEndpoint } from '../../constants/api.constants';
-import { StockPick } from '../models/stock.models';
+import { StockPick } from '../models';
 
 @Injectable({
   providedIn: 'root'

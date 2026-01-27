@@ -2,8 +2,7 @@ import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy, computed 
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { StockDetail } from '../../models/stock.models';
-import { StockAnalysis } from '../../services/ai-stock-analyzer.service';
+import { StockAnalysis, StockDetail } from '../../models';
 import { AiAdvisorActions } from '../../store/ai-advisor/ai-advisor.actions';
 import { selectAiAdvisorViewModel } from '../../store/ai-advisor/ai-advisor.selectors';
 

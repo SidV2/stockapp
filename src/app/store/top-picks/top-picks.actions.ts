@@ -1,5 +1,5 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
-import { StockPick } from '../../models/stock.models';
+import { StockPick } from '../../models';
 
 export const TopPicksActions = createActionGroup({
   source: 'Top Picks',

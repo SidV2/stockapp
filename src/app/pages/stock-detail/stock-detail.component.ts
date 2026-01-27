@@ -9,7 +9,7 @@ import { AboutPanelComponent } from '../../components/about-panel/about-panel.co
 import { LatestHeadlinesComponent } from '../../components/latest-headlines/latest-headlines.component';
 import { StockHeroComponent } from '../../components/stock-hero/stock-hero.component';
 import { StockSignalAdvisorComponent } from '../../components/stock-signal-advisor/stock-signal-advisor.component';
-import { HistoryRange } from '../../models/stock.models';
+import { HistoryRange } from '../../models';
 import { StockActions } from '../../store/stock/stock.actions';
 import { selectIsStockDetailLoading, selectLiveStock, selectStockDetailError } from '../../store/stock/stock.selectors';
 import { StockHistoryActions } from '../../store/stock-history/stock-history.actions';

@@ -1,19 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { StockDetail } from '../models/stock.models';
+import { StockAnalysis, StockDetail } from '../models';
 import { secrets, AI_PROVIDER } from '../../environments/environment.secrets';
-
-export interface StockAnalysis {
-  signal: 'BUY' | 'SELL' | 'HOLD';
-  confidence: number; // 0-100
-  reasoning: string;
-  keyFactors: string[];
-  targetPrice?: number;
-  timeHorizon: 'short-term' | 'medium-term' | 'long-term';
-  riskLevel: 'Low' | 'Medium' | 'High';
-}
 
 @Injectable({
   providedIn: 'root'

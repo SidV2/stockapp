@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { StockDetail } from '../models/stock.models';
+import { StockDetail } from '../models';
 import { HttpClient } from '@angular/common/http';
 import { stockDetailEndpoint } from '../../constants/api.constants';
 import { normalizeStockSymbol } from '../utils/stock.utils';

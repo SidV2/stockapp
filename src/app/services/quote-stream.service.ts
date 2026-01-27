@@ -1,115 +1,80 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, timer } from 'rxjs';
-import { catchError, filter, map, repeat, retry, shareReplay, tap } from 'rxjs/operators';
+import { catchError, filter, map, repeat, retry } from 'rxjs/operators';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { apiBaseUrl } from '../../constants/api.constants';
+import {
+  ConnectionStatus,
+  QuoteUpdate,
+  StockQuoteMessage,
+  WebSocketMessage
+} from '../models/websocket.models';
 
-export interface StockQuoteMessage {
-  type: 'stockQuote';
-  symbol: string;
-  data: {
-    price: number;
-    timestamp: number;
-  };
-}
+// --- Configuration ---
 
-export interface SubscribeMessage {
-  type: 'subscribe';
-  symbol: string;
-  intervalMs: number;
-}
-
-type WebSocketMessage = StockQuoteMessage | SubscribeMessage;
-
-export interface QuoteUpdate {
-  symbol: string;
-  price: number;
-  timestamp: number;
-}
-
-export type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting' | 'error';
+const WS_CONFIG = {
+  maxRetries: 10,
+  baseRetryDelay: 1000,
+  maxRetryDelay: 30000,
+  reconnectDelay: 2000,
+  subscribeInterval: 1000,
+} as const;
 
 @Injectable({ providedIn: 'root' })
 export class QuoteStreamService {
   private socket?: WebSocketSubject<WebSocketMessage>;
-  private connectionStatus$ = new BehaviorSubject<ConnectionStatus>('disconnected');
-  private reconnectAttempts = 0;
-  private readonly maxReconnectAttempts = 10;
-  private readonly baseReconnectDelay = 1000; // Start with 1 second
-  private readonly maxReconnectDelay = 30000; // Max 30 seconds
+  private readonly connectionStatus$ = new BehaviorSubject<ConnectionStatus>('disconnected');
 
-  /**
-   * Get current connection status
-   */
-  public getConnectionStatus(): Observable<ConnectionStatus> {
+  getConnectionStatus(): Observable<ConnectionStatus> {
     return this.connectionStatus$.asObservable();
   }
 
-  /**
-   * Connect to the quote stream for a symbol with automatic reconnection.
-   */
-  public stream(symbol: string): Observable<QuoteUpdate> {
-    // Close existing connection and reset state
+  stream(symbol: string): Observable<QuoteUpdate> {
     this.disconnect();
-    
-    return this.createWebSocketConnection(symbol).pipe(
-      map(message => ({
-        symbol: message.symbol,
-        price: message.data.price,
-        timestamp: message.data.timestamp,
-      })),
-      tap(() => {
-        if (this.connectionStatus$.value !== 'connected') {
-          this.connectionStatus$.next('connected');
-          this.reconnectAttempts = 0;
-        }
-      }),
-      // Retry on errors with exponential backoff
-      retry({
-        count: this.maxReconnectAttempts,
-        delay: (error, retryCount) => {
-          console.warn('WebSocket error, attempting reconnect:', error);
-          this.reconnectAttempts = retryCount;
-          this.connectionStatus$.next('reconnecting');
 
+    return this.createSocket(symbol).pipe(
+      filter((msg): msg is StockQuoteMessage => msg.type === 'stockQuote'),
+      map(msg => ({
+        symbol: msg.symbol,
+        price: msg.data.price,
+        timestamp: msg.data.timestamp,
+      })),
+      retry({
+        count: WS_CONFIG.maxRetries,
+        delay: (error, retryCount) => {
+          this.connectionStatus$.next('reconnecting');
           const delay = Math.min(
-            this.baseReconnectDelay * (2 ** (retryCount - 1)),
-            this.maxReconnectDelay
+            WS_CONFIG.baseRetryDelay * (2 ** (retryCount - 1)),
+            WS_CONFIG.maxRetryDelay
           );
-          console.log(`Reconnecting in ${delay}ms (attempt ${retryCount}/${this.maxReconnectAttempts})`);
+          console.log(`WebSocket error, reconnecting in ${delay}ms (${retryCount}/${WS_CONFIG.maxRetries})`);
           return timer(delay);
         }
       }),
-      // Repeat on normal close (server closed connection)
       repeat({
         delay: () => {
-          console.log('WebSocket closed, reconnecting in 2s...');
           this.connectionStatus$.next('reconnecting');
-          return timer(2000);
+          console.log(`WebSocket closed, reconnecting in ${WS_CONFIG.reconnectDelay}ms...`);
+          return timer(WS_CONFIG.reconnectDelay);
         }
       }),
       catchError(error => {
-        console.error('Fatal WebSocket error:', error);
+        console.error('WebSocket fatal error:', error);
         this.connectionStatus$.next('error');
         throw error;
-      }),
-      shareReplay({ bufferSize: 1, refCount: true })
+      })
     );
   }
 
-  /**
-   * Manually disconnect the WebSocket
-   */
-  public disconnect(): void {
+  disconnect(): void {
     if (this.socket) {
       this.socket.complete();
       this.socket = undefined;
       this.connectionStatus$.next('disconnected');
-      this.reconnectAttempts = 0;
     }
   }
 
-  private createWebSocketConnection(symbol: string): Observable<StockQuoteMessage> {
+  private createSocket(symbol: string): Observable<WebSocketMessage> {
     const wsUrl = apiBaseUrl.replace(/^http/, 'ws');
 
     this.socket = webSocket<WebSocketMessage>({
@@ -118,28 +83,18 @@ export class QuoteStreamService {
         next: () => {
           console.log(`WebSocket connected for ${symbol}`);
           this.connectionStatus$.next('connected');
-          this.reconnectAttempts = 0;
-
-          // Send subscribe message after connection opens
           this.socket?.next({
             type: 'subscribe',
-            symbol: symbol,
-            intervalMs: 1000
+            symbol,
+            intervalMs: WS_CONFIG.subscribeInterval
           });
         }
       },
       closeObserver: {
-        next: () => {
-          console.log(`WebSocket closed for ${symbol}`);
-          if (this.connectionStatus$.value === 'connected') {
-            this.connectionStatus$.next('reconnecting');
-          }
-        }
+        next: () => console.log(`WebSocket closed for ${symbol}`)
       }
     });
 
-    return this.socket.asObservable().pipe(
-      filter((msg): msg is StockQuoteMessage => msg.type === 'stockQuote')
-    );
+    return this.socket.asObservable();
   }
 }

@@ -3,7 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { StockSignalAdvisorComponent } from './stock-signal-advisor.component';
 import { AiStockAnalyzerService } from '../../services/ai-stock-analyzer.service';
 import { of } from 'rxjs';
-import { StockDetail } from '../../models/stock.models';
+import { StockDetail } from '../../models';
 
 describe('StockSignalAdvisorComponent', () => {
   let component: StockSignalAdvisorComponent;

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { MarketIndex } from '../../models/stock.models';
+import { MarketIndex } from '../../models';
 import { SparklineComponent } from '../sparkline/sparkline.component';
 
 @Component({

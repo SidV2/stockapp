@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { StockNewsItem } from '../../models/stock.models';
+import { StockNewsItem } from '../../models';
 
 @Component({
   selector: 'app-latest-headlines',

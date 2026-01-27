@@ -1,5 +1,5 @@
 import { createActionGroup, props } from '@ngrx/store';
-import { HistoryRange, StockHistory } from '../../models/stock.models';
+import { HistoryRange, StockHistory } from '../../models';
 
 export const StockHistoryActions = createActionGroup({
   source: 'Stock History',

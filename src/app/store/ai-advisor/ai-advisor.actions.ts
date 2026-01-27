@@ -1,6 +1,5 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
-import { StockDetail } from '../../models/stock.models';
-import { StockAnalysis } from '../../services/ai-stock-analyzer.service';
+import { StockAnalysis, StockDetail } from '../../models';
 
 export const AiAdvisorActions = createActionGroup({
   source: 'AI Advisor',

@@ -4,7 +4,7 @@ import { bufferTime, catchError, filter, finalize, map, mergeMap, of, switchMap,
 import { StockDetailService } from '../../services/stock-detail.service';
 import { QuoteStreamService } from '../../services/quote-stream.service';
 import { StockActions } from './stock.actions';
-import { StockDetailUpdate } from '../../models/stock.models';
+import { StockDetailUpdate } from '../../models';
 
 @Injectable()
 export class StockEffects {
