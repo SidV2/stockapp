@@ -1,116 +1,41 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { StockAnalysis, StockDetail } from '../models';
-import { secrets, AI_PROVIDER } from '../../environments/environment.secrets';
+import { openAiConfig } from '../../environments/environment.secrets';
 
-@Injectable({
-  providedIn: 'root'
-})
+const PROXY_URL = 'http://localhost:3001/api/analyze';
+
+@Injectable({ providedIn: 'root' })
 export class AiStockAnalyzerService {
-  private readonly aiProvider = AI_PROVIDER;
-
   constructor(private http: HttpClient) {}
 
   analyzeStock(stockDetail: StockDetail): Observable<StockAnalysis> {
-    // All providers require configuration now (no fallback mode)
-
     const prompt = this.buildAnalysisPrompt(stockDetail);
 
-    switch (this.aiProvider) {
-      case 'openai':
-        return this.analyzeWithOpenAI(prompt, stockDetail);
-      case 'anthropic':
-        return this.analyzeWithAnthropic(prompt, stockDetail);
-      case 'gemini':
-        return this.analyzeWithGemini(prompt, stockDetail);
-      default:
-        return throwError(() => new Error('Invalid AI provider configured'));
-    }
-  }
-
-  private analyzeWithOpenAI(prompt: string, stockDetail: StockDetail): Observable<StockAnalysis> {
-    // Use local proxy server to bypass CORS restrictions
-    const proxyUrl = 'http://localhost:3001/api/analyze';
-    
-    console.log('🤖 Sending request to OpenAI via proxy...');
-
-    return this.http.post<StockAnalysis>(proxyUrl, {
-      prompt: prompt,
-      model: secrets.openai.model
+    return this.http.post<StockAnalysis>(PROXY_URL, {
+      prompt,
+      model: openAiConfig.model
     }).pipe(
       map(response => {
-        console.log('✅ OpenAI analysis received');
+        console.log('OpenAI analysis received');
         return response;
       }),
-      this.handleAiError('OpenAI', (error) => {
+      catchError((error: any) => {
+        console.error('OpenAI Error:', error);
+
+        let message = 'Failed to get AI analysis';
         if (error.status === 0) {
-          return 'Proxy server not running. Start it with: npm run proxy';
+          message = 'Proxy server not running. Start it with: npm run proxy';
         } else if (error.status === 401) {
-          return 'Invalid OpenAI API key. Please check your .env file';
+          message = 'Invalid OpenAI API key. Check your .env file';
+        } else if (error.error?.error?.message) {
+          message = error.error.error.message;
         }
-        return null; // Use default error message
+
+        return throwError(() => new Error(message));
       })
-    );
-  }
-
-  private analyzeWithAnthropic(prompt: string, stockDetail: StockDetail): Observable<StockAnalysis> {
-    if (!secrets.anthropic.apiKey) {
-      return throwError(() => new Error('Anthropic API key not configured. Please add your key to environment.secrets.ts'));
-    }
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'x-api-key': secrets.anthropic.apiKey,
-      'anthropic-version': '2023-06-01'
-    });
-
-    const body = {
-      model: secrets.anthropic.model,
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: `You are an expert financial analyst. ${prompt}\n\nRespond ONLY with valid JSON.`
-        }
-      ]
-    };
-
-    return this.http.post<any>('https://api.anthropic.com/v1/messages', body, { headers }).pipe(
-      map(response => {
-        const content = response.content[0].text;
-        return JSON.parse(content) as StockAnalysis;
-      }),
-      this.handleAiError('Anthropic')
-    );
-  }
-
-  private analyzeWithGemini(prompt: string, stockDetail: StockDetail): Observable<StockAnalysis> {
-    if (!secrets.gemini.apiKey) {
-      return throwError(() => new Error('Gemini API key not configured. Please add your key to environment.secrets.ts'));
-    }
-
-    const body = {
-      contents: [
-        {
-          parts: [
-            {
-              text: `You are an expert financial analyst. ${prompt}\n\nRespond ONLY with valid JSON.`
-            }
-          ]
-        }
-      ]
-    };
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${secrets.gemini.model}:generateContent?key=${secrets.gemini.apiKey}`;
-
-    return this.http.post<any>(url, body).pipe(
-      map(response => {
-        const content = response.candidates[0].content.parts[0].text;
-        return JSON.parse(content) as StockAnalysis;
-      }),
-      this.handleAiError('Gemini')
     );
   }
 
@@ -161,30 +86,5 @@ Provide your analysis in the following JSON format:
   "timeHorizon": "short-term" | "medium-term" | "long-term",
   "riskLevel": "Low" | "Medium" | "High"
 }`;
-  }
-
-  /**
-   * Shared error handler for AI provider requests
-   * @param provider - Name of the AI provider (for logging)
-   * @param customErrorFn - Optional function to provide custom error messages based on error object
-   */
-  private handleAiError(
-    provider: string,
-    customErrorFn?: (error: any) => string | null
-  ): (source: Observable<StockAnalysis>) => Observable<StockAnalysis> {
-    return catchError((error: any) => {
-      console.error(`❌ ${provider} Error:`, error);
-      
-      // Try custom error message first
-      const customMessage = customErrorFn?.(error);
-      
-      // Fall back to standard error extraction
-      const errorMessage = customMessage 
-        || error.error?.error?.message 
-        || error.error?.error 
-        || `Failed to get AI analysis from ${provider}`;
-      
-      return throwError(() => new Error(errorMessage));
-    });
   }
 }

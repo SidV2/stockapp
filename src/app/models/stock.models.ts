@@ -1,29 +1,3 @@
-export interface StockQuote {
-  symbol: string;
-  name: string;
-  price: number;
-  change: number; // absolute change
-  changePercent: number; // -1.23 means -1.23%
-  marketCap?: number;
-  volume?: number;
-  history?: number[]; // recent prices for sparkline
-}
-
-export interface MarketIndex {
-  symbol: string; // e.g., ^GSPC
-  name: string;   // e.g., S&P 500
-  price: number;
-  change: number;
-  changePercent: number;
-  history?: number[]; // recent prices for sparkline
-}
-
-export interface MarketSnapshot {
-  indices: MarketIndex[];
-  watchlist: StockQuote[];
-  asOf: number; // epoch ms
-}
-
 export interface StockPick {
   symbol: string;
   company: string;
@@ -31,15 +5,6 @@ export interface StockPick {
   summary: string;
   sparkline: number[];
   trend: 'up' | 'down';
-}
-
-export interface StockResult {
-  symbol: string;
-  company: string;
-  price: number;
-  changePercent: number;
-  changeValue: number;
-  highlight?: boolean;
 }
 
 export interface StockInsight {
