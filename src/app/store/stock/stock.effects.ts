@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { bufferTime, catchError, filter, map, mergeMap, of, switchMap, takeUntil } from 'rxjs';
+import { bufferTime, catchError, filter, finalize, map, mergeMap, of, switchMap, takeUntil } from 'rxjs';
 import { StockDetailService } from '../../services/stock-detail.service';
 import { QuoteStreamService } from '../../services/quote-stream.service';
 import { StockActions } from './stock.actions';
@@ -52,6 +52,7 @@ export class StockEffects {
             })
           ),
           takeUntil(this.actions$.pipe(ofType(StockActions.resetDetail, StockActions.loadDetail))),
+          finalize(() => this.quoteStreamService.disconnect()),
           catchError((error) =>
             of(
               StockActions.loadDetailFailure({

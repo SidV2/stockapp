@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, timer } from 'rxjs';
-import { catchError, delayWhen, filter, map, retryWhen, shareReplay, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, timer } from 'rxjs';
+import { catchError, filter, map, repeat, retry, shareReplay, tap } from 'rxjs/operators';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { apiBaseUrl } from '../../constants/api.constants';
 
@@ -13,6 +13,14 @@ export interface StockQuoteMessage {
   };
 }
 
+export interface SubscribeMessage {
+  type: 'subscribe';
+  symbol: string;
+  intervalMs: number;
+}
+
+type WebSocketMessage = StockQuoteMessage | SubscribeMessage;
+
 export interface QuoteUpdate {
   symbol: string;
   price: number;
@@ -23,7 +31,7 @@ export type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting' | '
 
 @Injectable({ providedIn: 'root' })
 export class QuoteStreamService {
-  private socket?: WebSocketSubject<StockQuoteMessage>;
+  private socket?: WebSocketSubject<WebSocketMessage>;
   private connectionStatus$ = new BehaviorSubject<ConnectionStatus>('disconnected');
   private reconnectAttempts = 0;
   private readonly maxReconnectAttempts = 10;
@@ -45,7 +53,6 @@ export class QuoteStreamService {
     this.disconnect();
     
     return this.createWebSocketConnection(symbol).pipe(
-      filter(message => message.type === 'stockQuote'),
       map(message => ({
         symbol: message.symbol,
         price: message.data.price,
@@ -57,29 +64,30 @@ export class QuoteStreamService {
           this.reconnectAttempts = 0;
         }
       }),
-      retryWhen(errors => 
-        errors.pipe(
-          tap(error => {
-            console.warn('WebSocket error, attempting reconnect:', error);
-            this.reconnectAttempts++;
-            
-            if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-              this.connectionStatus$.next('error');
-              throw new Error('Max reconnection attempts reached');
-            }
-            
-            this.connectionStatus$.next('reconnecting');
-          }),
-          delayWhen(() => {
-            const delay = Math.min(
-              this.baseReconnectDelay * (2 ** (this.reconnectAttempts - 1)),
-              this.maxReconnectDelay
-            );
-            console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-            return timer(delay);
-          })
-        )
-      ),
+      // Retry on errors with exponential backoff
+      retry({
+        count: this.maxReconnectAttempts,
+        delay: (error, retryCount) => {
+          console.warn('WebSocket error, attempting reconnect:', error);
+          this.reconnectAttempts = retryCount;
+          this.connectionStatus$.next('reconnecting');
+
+          const delay = Math.min(
+            this.baseReconnectDelay * (2 ** (retryCount - 1)),
+            this.maxReconnectDelay
+          );
+          console.log(`Reconnecting in ${delay}ms (attempt ${retryCount}/${this.maxReconnectAttempts})`);
+          return timer(delay);
+        }
+      }),
+      // Repeat on normal close (server closed connection)
+      repeat({
+        delay: () => {
+          console.log('WebSocket closed, reconnecting in 2s...');
+          this.connectionStatus$.next('reconnecting');
+          return timer(2000);
+        }
+      }),
       catchError(error => {
         console.error('Fatal WebSocket error:', error);
         this.connectionStatus$.next('error');
@@ -103,14 +111,21 @@ export class QuoteStreamService {
 
   private createWebSocketConnection(symbol: string): Observable<StockQuoteMessage> {
     const wsUrl = apiBaseUrl.replace(/^http/, 'ws');
-    
-    this.socket = webSocket<StockQuoteMessage>({
-      url: `${wsUrl}/ws/quotes?symbol=${encodeURIComponent(symbol)}`,
+
+    this.socket = webSocket<WebSocketMessage>({
+      url: `${wsUrl}/ws/quotes`,
       openObserver: {
         next: () => {
           console.log(`WebSocket connected for ${symbol}`);
           this.connectionStatus$.next('connected');
           this.reconnectAttempts = 0;
+
+          // Send subscribe message after connection opens
+          this.socket?.next({
+            type: 'subscribe',
+            symbol: symbol,
+            intervalMs: 1000
+          });
         }
       },
       closeObserver: {
@@ -123,6 +138,8 @@ export class QuoteStreamService {
       }
     });
 
-    return this.socket.asObservable();
+    return this.socket.asObservable().pipe(
+      filter((msg): msg is StockQuoteMessage => msg.type === 'stockQuote')
+    );
   }
 }
