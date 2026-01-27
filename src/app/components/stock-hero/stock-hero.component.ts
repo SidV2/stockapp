@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, DestroyRef, effect, ElementRef, EventEmitter, input, OnInit, output, signal, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, DestroyRef, effect, ElementRef, input, output, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { animationFrameScheduler, Subject } from 'rxjs';
 import { observeOn } from 'rxjs/operators';
@@ -14,8 +14,7 @@ import { SparklineComponent } from '../sparkline/sparkline.component';
   styleUrl: './stock-hero.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StockHeroComponent implements OnInit {
-  // Modern Angular signals for inputs/outputs
+export class StockHeroComponent implements AfterViewInit {
   readonly detail = input.required<StockDetail | undefined>();
   readonly selectedTimeframe = input.required<string>();
   readonly history = input<number[] | null | undefined>(undefined);
@@ -24,26 +23,24 @@ export class StockHeroComponent implements OnInit {
 
   @ViewChild('chartContainer', { read: ElementRef }) chartContainer?: ElementRef<HTMLDivElement>;
 
-  // Local state as signals
   private readonly liveHistory = signal<number[]>([]);
   private readonly MAX_LIVE_HISTORY = 200;
   readonly chartWidth = signal(680);
   private readonly resize$ = new Subject<void>();
-  
-  // Animated values for smooth transitions
+  private resizeObserver?: ResizeObserver;
+
   readonly animatedPrice = signal<number | undefined>(undefined);
   readonly animatedChange = signal<number | undefined>(undefined);
   readonly animatedChangePercent = signal<number | undefined>(undefined);
-  
-  // Separate animation frame IDs for each property
+
   private priceAnimationId?: number;
   private changeAnimationId?: number;
   private changePercentAnimationId?: number;
-  
-  // Track target values to avoid re-triggering animations
+
   private targetPrice?: number;
   private targetChange?: number;
   private targetChangePercent?: number;
+  private previousSymbol?: string;
 
   // Computed values using signals - cleaner than getters
   readonly displayPrice = computed(() => {
@@ -93,51 +90,51 @@ export class StockHeroComponent implements OnInit {
 
   constructor(
     private readonly cdr: ChangeDetectorRef,
-    private readonly elementRef: ElementRef,
     private readonly destroyRef: DestroyRef
   ) {
-    // Setup resize handler with animation frame scheduling
+    // Setup resize handler
     this.resize$.pipe(
       observeOn(animationFrameScheduler),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => this.updateChartWidth());
-    
-    // Watch for price changes and trigger animation
+
+    // Register all cleanup in constructor
+    this.destroyRef.onDestroy(() => {
+      this.resize$.complete();
+      this.resizeObserver?.disconnect();
+      if (this.priceAnimationId) cancelAnimationFrame(this.priceAnimationId);
+      if (this.changeAnimationId) cancelAnimationFrame(this.changeAnimationId);
+      if (this.changePercentAnimationId) cancelAnimationFrame(this.changePercentAnimationId);
+    });
+
+    // Price animation effect
     effect(() => {
       this.handlePriceChange(this.displayPrice());
     }, { allowSignalWrites: true });
-    
-    // Watch for change value and trigger animation
+
+    // Change animation effect
     effect(() => {
-      const newChange = this.displayChange();
-      this.handleChangeUpdate(newChange);
-    }, { allowSignalWrites: true });
-    
-    // Watch for change percent and trigger animation
-    effect(() => {
-      const newPercent = this.displayChangePercent();
-      this.handleChangePercentUpdate(newPercent);
+      this.handleChangeUpdate(this.displayChange());
     }, { allowSignalWrites: true });
 
-    // Use effect to handle live history updates
+    // Change percent animation effect
+    effect(() => {
+      this.handleChangePercentUpdate(this.displayChangePercent());
+    }, { allowSignalWrites: true });
+
+    // Live history updates effect
     effect(() => {
       const detail = this.detail();
-      
       if (!detail) return;
 
-      // Check if this is a new symbol or first load
       const isNewSymbol = detail.symbol !== this.previousSymbol;
 
       if (isNewSymbol) {
-        // Initialize or reset history for new symbol
         const initialHistory = detail.history ?? [];
         this.liveHistory.set(initialHistory.slice(-this.MAX_LIVE_HISTORY));
         this.previousSymbol = detail.symbol;
       } else {
-        // Add new price point for the same symbol (live update)
         const currentHistory = this.liveHistory();
-        
-        // Only add if price actually changed to avoid duplicates
         const lastPrice = currentHistory[currentHistory.length - 1];
         if (lastPrice !== detail.price) {
           const updated = [...currentHistory, detail.price];
@@ -151,27 +148,13 @@ export class StockHeroComponent implements OnInit {
     }, { allowSignalWrites: true });
   }
 
-  private previousSymbol?: string;
+  ngAfterViewInit(): void {
+    this.updateChartWidth();
 
-  ngOnInit(): void {
-    // Initial width calculation and setup resize observer
-    setTimeout(() => {
-      this.updateChartWidth();
-      
-      // Observe the chart container specifically for more accurate resize detection
-      if (this.chartContainer) {
-        const resizeObserver = new ResizeObserver(() => this.resize$.next());
-        resizeObserver.observe(this.chartContainer.nativeElement);
-        
-        // Cleanup
-        this.destroyRef.onDestroy(() => {
-          resizeObserver.disconnect();
-          if (this.priceAnimationId) cancelAnimationFrame(this.priceAnimationId);
-          if (this.changeAnimationId) cancelAnimationFrame(this.changeAnimationId);
-          if (this.changePercentAnimationId) cancelAnimationFrame(this.changePercentAnimationId);
-        });
-      }
-    }, 0);
+    if (this.chartContainer) {
+      this.resizeObserver = new ResizeObserver(() => this.resize$.next());
+      this.resizeObserver.observe(this.chartContainer.nativeElement);
+    }
   }
 
   onTimeframeSelect(range: string): void {
