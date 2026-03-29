@@ -22,7 +22,6 @@ Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryS
 })
 export class SparklineComponent implements AfterViewInit, OnDestroy {
   readonly values = input<number[] | undefined>([]);
-  readonly width = input<number>(120);
   readonly height = input<number>(32);
   readonly stroke = input<string>('#0a7d22');
 
@@ -61,11 +60,6 @@ export class SparklineComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
-    this.chart?.destroy();
-    this.chart = undefined;
-  }
-
   private buildDataset(values: number[] | undefined, stroke: string): ChartDataset<'line'> {
     return {
       data: values ?? [],
@@ -81,5 +75,10 @@ export class SparklineComponent implements AfterViewInit, OnDestroy {
     (dataset as ChartDataset<'line'>).borderColor = stroke;
     this.chart!.data.labels = (values ?? []).map((_, i) => i);
     this.chart!.update();
+  }
+
+  ngOnDestroy(): void {
+    this.chart?.destroy();
+    this.chart = undefined;
   }
 }
