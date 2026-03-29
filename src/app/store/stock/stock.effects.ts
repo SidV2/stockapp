@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { bufferTime, catchError, filter, finalize, map, mergeMap, of, switchMap, takeUntil } from 'rxjs';
+import { auditTime, catchError, finalize, map, of, switchMap, takeUntil } from 'rxjs';
 import { StockDetailService } from '../../services/stock-detail.service';
 import { QuoteStreamService } from '../../services/quote-stream.service';
 import { StockActions } from './stock.actions';
@@ -26,26 +26,13 @@ export class StockEffects {
     )
   );
 
-  constructor(
-    private readonly actions$: Actions,
-    private readonly stockDetailService: StockDetailService,
-    private readonly quoteStreamService: QuoteStreamService
-  ) {}
-
   readonly liveQuoteStream$ = createEffect(() =>
     this.actions$.pipe(
       ofType(StockActions.loadDetailSuccess),
       switchMap(({ detail }) =>
         this.quoteStreamService.stream(detail.symbol).pipe(
           map((quote) => ({ symbol: quote.symbol, price: quote.price, updatedAt: quote.timestamp } as StockDetailUpdate)),
-          bufferTime(1000), // 1 second for responsive real-time updates
-          filter((batch) => batch.length > 0),
-          map((batch) =>
-            batch
-              .filter((u) => u && (u.symbol ?? detail.symbol) && (u.updatedAt ?? 0) > 0)
-              .sort((a, b) => (a.updatedAt ?? 0) - (b.updatedAt ?? 0))
-          ),
-          mergeMap((sorted) => sorted),
+          auditTime(1000),
           map((update) =>
             StockActions.liveQuoteUpdate({
               update: { ...update, symbol: update.symbol ?? detail.symbol }
@@ -64,4 +51,10 @@ export class StockEffects {
       )
     )
   );
+
+    constructor(
+    private readonly actions$: Actions,
+    private readonly stockDetailService: StockDetailService,
+    private readonly quoteStreamService: QuoteStreamService
+  ) {}
 }

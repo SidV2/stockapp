@@ -1,10 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter, distinctUntilChanged, map, tap } from 'rxjs/operators';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 import { AboutPanelComponent } from '../../components/about-panel/about-panel.component';
 import { LatestHeadlinesComponent } from '../../components/latest-headlines/latest-headlines.component';
 import { StockHeroComponent } from '../../components/stock-hero/stock-hero.component';
@@ -24,42 +23,36 @@ import { QuoteStreamService } from '../../services/quote-stream.service';
   styleUrl: './stock-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StockDetailComponent {
+export class StockDetailComponent implements OnInit, OnDestroy {
   private readonly store = inject(Store);
   private readonly route = inject(ActivatedRoute);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly quoteStreamService = inject(QuoteStreamService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Convert observables to signals for better performance and readability
-  readonly detail = toSignal(this.store.select(selectLiveStock));
-  readonly loading = toSignal(this.store.select(selectIsStockDetailLoading), { initialValue: false });
-  readonly error = toSignal(this.store.select(selectStockDetailError));
-  readonly history = toSignal(this.store.select(selectStockHistory));
-  readonly connectionStatus = toSignal(this.quoteStreamService.getConnectionStatus(), { initialValue: 'disconnected' as const });
+  readonly detail = this.store.selectSignal(selectLiveStock);
+  readonly loading = this.store.selectSignal(selectIsStockDetailLoading);
+  readonly error = this.store.selectSignal(selectStockDetailError);
+  readonly history = this.store.selectSignal(selectStockHistory);
+  readonly connectionStatus = toSignal(this.quoteStreamService.getConnectionStatus(), { requireSync: true });
 
   // Use signals for local state
   readonly timeframes: string[] = ['Live', '1d', '5d', '1m', '6m', '1y', '5y'];
   readonly selectedTimeframe = signal<string>(this.timeframes[0]);
   private readonly currentSymbol = signal<string | null>(null);
 
-  constructor() {
-    // Handle route parameter changes
+  ngOnInit(): void {
     this.route.paramMap.pipe(
       map(params => params.get('symbol')),
-      filter((symbol): symbol is string => !!symbol),
-      map(symbol => symbol.toUpperCase()),
       distinctUntilChanged(),
-      tap(symbol => {
-        this.currentSymbol.set(symbol);
-        this.store.dispatch(StockActions.loadDetail({ symbol }));
-        this.loadHistoryForCurrentTimeframe();
-      }),
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe();
-      
-    // Cleanup on destroy
-    this.destroyRef.onDestroy(() => {
-      this.store.dispatch(StockActions.resetDetail());
+    ).subscribe(symbol => {
+      if (symbol) {
+        const upperSymbol = symbol.toUpperCase();
+        this.currentSymbol.set(upperSymbol);
+        this.store.dispatch(StockActions.loadDetail({ symbol: upperSymbol }));
+        this.loadHistoryForCurrentTimeframe();
+      }
     });
   }
 
@@ -87,5 +80,9 @@ export class StockDetailComponent {
         })
       );
     }
+  }
+
+  ngOnDestroy(): void {
+    this.store.dispatch(StockActions.resetDetail());
   }
 }
