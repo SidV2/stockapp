@@ -2,28 +2,25 @@ import { createSelector } from '@ngrx/store';
 import { stockDetailFeature } from './stock.reducer';
 import { StockDetail } from '../../models';
 
-export const selectStockDetail = stockDetailFeature.selectDetail;
-const selectStockLiveUpdate = stockDetailFeature.selectLiveUpdate;
-const selectStockDetailStatus = stockDetailFeature.selectStatus;
+const {
+  selectDetail,
+  selectLiveUpdate,
+  selectStatus,
+  selectError,
+  selectLiveHistory: selectLiveHistoryFromFeature
+} = stockDetailFeature;
 
-export const selectStockDetailError = stockDetailFeature.selectError;
-
-export const selectIsStockDetailLoading = createSelector(
-  selectStockDetailStatus,
-  selectStockDetail,
-  (status, detail) => status === 'loading' && !detail
+export const selectStockDetail = createSelector(
+  selectDetail,
+  (detail) => detail
 );
 
 export const selectLiveStock = createSelector(
-  selectStockDetail,
-  selectStockLiveUpdate,
+  selectDetail,
+  selectLiveUpdate,
   (detail, liveUpdate): StockDetail | null => {
-    if (!detail) {
-      return null;
-    }
-    if (!liveUpdate || liveUpdate.price === undefined) {
-      return detail;
-    }
+    if (!detail) return null;
+    if (!liveUpdate || liveUpdate.price === undefined) return detail;
     return {
       ...detail,
       price: liveUpdate.price,
@@ -32,4 +29,25 @@ export const selectLiveStock = createSelector(
       updatedAt: liveUpdate.updatedAt ?? detail.updatedAt
     };
   }
+);
+
+export const selectStockDetailStatus = createSelector(
+  selectStatus,
+  (status) => status
+);
+
+export const selectIsStockDetailLoading = createSelector(
+  selectStockDetailStatus,
+  selectStockDetail,
+  (status, detail) => status === 'loading' && !detail
+);
+
+export const selectStockDetailError = createSelector(
+  selectError,
+  (error) => error
+);
+
+export const selectLiveHistory = createSelector(
+  selectLiveHistoryFromFeature,
+  (history) => history
 );
