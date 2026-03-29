@@ -9,7 +9,6 @@ export type StockDetailStatus = 'idle' | 'loading' | 'success' | 'error';
 export interface StockDetailState {
   detail: StockDetail | null;
   liveUpdate: StockDetailUpdate | null;
-  liveHistory: number[];
   status: StockDetailStatus;
   error: string | null;
 }
@@ -17,7 +16,6 @@ export interface StockDetailState {
 const initialState: StockDetailState = {
   detail: null,
   liveUpdate: null,
-  liveHistory: [],
   status: 'idle',
   error: null
 };
@@ -41,8 +39,6 @@ const normalizeStockDetail = (incoming: IncomingStockDetail, existing?: StockDet
   return { ...(merged as StockDetail), symbol, updatedAt };
 };
 
-const MAX_LIVE_HISTORY = 200;
-
 export const stockDetailFeature = createFeature({
   name: stockDetailFeatureKey,
   reducer: createReducer(
@@ -51,7 +47,6 @@ export const stockDetailFeature = createFeature({
     on(StockActions.loadDetail, (state): StockDetailState => ({
       ...state,
       liveUpdate: null,
-      liveHistory: [],
       status: 'loading',
       error: null
     })),
@@ -59,7 +54,6 @@ export const stockDetailFeature = createFeature({
       ...state,
       detail: normalizeStockDetail(detail),
       liveUpdate: null,
-      liveHistory: (detail.history ?? []).slice(-MAX_LIVE_HISTORY),
       status: 'success',
       error: null
     })),
@@ -70,27 +64,25 @@ export const stockDetailFeature = createFeature({
       if (update.symbol !== state.detail.symbol) {
         return state;
       }
+      const price = update.price;
+      const previousClose = state.detail.previousClose;
+      const history = state.detail.history ?? [];
+      const updatedHistory = history[history.length - 1] === price
+        ? history
+        : [...history, price].slice(-200);
       return {
         ...state,
         liveUpdate: update,
+        detail: {
+          ...state.detail,
+          price,
+          change: price - previousClose,
+          changePercent: (price - previousClose) / previousClose,
+          updatedAt: update.updatedAt ?? state.detail.updatedAt,
+          history: updatedHistory
+        }
       };
     }),
-    on(StockActions.appendLivePrice, (state, { price }): StockDetailState => {
-      const current = state.liveHistory;
-      const last = current[current.length - 1];
-      if (last === price) {
-        return state;
-      }
-      const updated = [...current, price];
-      return {
-        ...state,
-        liveHistory: updated.length > MAX_LIVE_HISTORY ? updated.slice(-MAX_LIVE_HISTORY) : updated
-      };
-    }),
-    on(StockActions.resetLiveHistory, (state, { history }): StockDetailState => ({
-      ...state,
-      liveHistory: history.slice(-MAX_LIVE_HISTORY)
-    })),
     on(StockActions.loadDetailFailure, (state, { error }): StockDetailState => ({
       ...state,
       status: 'error',
@@ -107,5 +99,4 @@ export const {
   selectStatus,
   selectError,
   selectLiveUpdate,
-  selectLiveHistory,
 } = stockDetailFeature;

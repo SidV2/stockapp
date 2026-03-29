@@ -48,9 +48,9 @@ export interface StockDetail {
 }
 
 // Live updates may only include a subset of fields; symbol is filled client-side if absent.
-export type StockDetailUpdate = Partial<StockDetail> & { symbol?: string; updatedAt?: number };
+export type StockDetailUpdate = Partial<StockDetail> & { symbol?: string; updatedAt?: number; price: number };
 
-export type HistoryRange = '1d' | '5d' | '1m' | '6m' | '1y' | '5y';
+export type HistoryRange = '5d' | '1m' | '6m' | '1y' | '5y';
 
 export interface StockHistory {
   symbol: string;

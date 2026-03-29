@@ -24,12 +24,7 @@ export class StockSignalAdvisorContainerComponent implements OnDestroy {
   readonly aiError = computed(() => this.aiViewModel().error);
 
   constructor() {
-    effect(() => {
-      const detail = this.detail();
-      if (detail) {
-        this.store.dispatch(AiAdvisorActions.analyzeStock({ stockDetail: detail }));
-      }
-    });
+    
   }
 
   onAnalyzeRequested(): void {

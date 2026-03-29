@@ -3,7 +3,8 @@ import { Store } from '@ngrx/store';
 import { HistoryRange } from '../../models';
 import { StockHistoryActions } from '../../store/stock-history/stock-history.actions';
 import { selectStockHistory } from '../../store/stock-history/stock-history.selectors';
-import { selectLiveHistory, selectLiveStock } from '../../store/stock/stock.selectors';
+import { StockActions } from '../../store/stock/stock.actions';
+import { selectStockDetail } from '../../store/stock/stock.selectors';
 import { StockHeroComponent } from './stock-hero.component';
 
 @Component({
@@ -20,27 +21,24 @@ export class StockHeroContainerComponent {
   readonly timeframes = input<string[]>([]);
   readonly timeframeChange = output<string>();
 
-  readonly detail = this.store.selectSignal(selectLiveStock);
+  readonly detail = this.store.selectSignal(selectStockDetail);
   private readonly storeHistory = this.store.selectSignal(selectStockHistory);
-  private readonly liveHistory = this.store.selectSignal(selectLiveHistory);
 
+  // Live: real-time ticking price from reducer
+  // 5d+: last value of loaded history range
   readonly displayPrice = computed(() => {
     const timeframe = this.selectedTimeframe();
-    const history = this.storeHistory()?.history;
-    if (timeframe !== 'Live' && timeframe !== '1d' && history?.length) {
-      return history[history.length - 1];
-    }
-    return this.detail()?.price;
+    if (timeframe === 'Live') return this.detail()?.price;
+    return this.storeHistory()?.history?.at(-1) ?? this.detail()?.price;
   });
 
   readonly displayChange = computed(() => {
     const timeframe = this.selectedTimeframe();
-    const history = this.storeHistory()?.history;
-    const detail = this.detail();
-    if (timeframe !== 'Live' && timeframe !== '1d' && history?.length && detail?.previousClose) {
-      return history[history.length - 1] - detail.previousClose;
-    }
-    return detail?.change;
+    if (timeframe === 'Live') return this.detail()?.change;
+    const price = this.storeHistory()?.history?.at(-1);
+    const previousClose = this.detail()?.previousClose;
+    if (price !== undefined && previousClose) return price - previousClose;
+    return this.detail()?.change;
   });
 
   readonly displayChangePercent = computed(() => {
@@ -52,18 +50,24 @@ export class StockHeroContainerComponent {
     return detail?.changePercent;
   });
 
+  // Live: detail.history grows with WebSocket ticks
+  // 5d+: loaded from history store on demand
   readonly sparklineValues = computed(() => {
     const timeframe = this.selectedTimeframe();
-    if (timeframe === 'Live') return this.liveHistory();
-    if (timeframe === '1d') return this.detail()?.history;
+    if (timeframe === 'Live') return this.detail()?.history ?? undefined;
     return this.storeHistory()?.history ?? undefined;
   });
 
   onTimeframeChange(range: string): void {
     this.timeframeChange.emit(range);
     const symbol = this.detail()?.symbol;
-    if (symbol && range !== 'Live' && range !== '1d') {
-      this.store.dispatch(StockHistoryActions.loadHistory({ symbol, range: range as HistoryRange }));
+    if (range === 'Live') {
+      this.store.dispatch(StockActions.startLiveStream());
+    } else {
+      this.store.dispatch(StockActions.stopLiveStream());
+      if (symbol) {
+        this.store.dispatch(StockHistoryActions.loadHistory({ symbol, range: range as HistoryRange }));
+      }
     }
   }
 }

@@ -37,10 +37,11 @@ export class SparklineComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    const data = this.normalizeValues(this.values());
     this.chart = new Chart(this.canvasRef.nativeElement, {
       type: 'line',
       data: {
-        labels: [],
+        labels: data.map((_, i) => i),
         datasets: [this.buildDataset(this.values(), this.stroke())]
       },
       options: {
@@ -60,9 +61,16 @@ export class SparklineComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  private normalizeValues(values: number[] | undefined): number[] {
+    if (!values || values.length === 0) return [];
+    if (values.length === 1) return [values[0], values[0]];
+    return values;
+  }
+
   private buildDataset(values: number[] | undefined, stroke: string): ChartDataset<'line'> {
+    const data = this.normalizeValues(values);
     return {
-      data: values ?? [],
+      data,
       borderColor: stroke,
       fill: false,
       pointRadius: 0
@@ -70,10 +78,11 @@ export class SparklineComponent implements AfterViewInit, OnDestroy {
   }
 
   private updateChart(values: number[] | undefined, stroke: string): void {
+    const data = this.normalizeValues(values);
     const dataset = this.chart!.data.datasets[0];
-    dataset.data = values ?? [];
+    dataset.data = data;
     (dataset as ChartDataset<'line'>).borderColor = stroke;
-    this.chart!.data.labels = (values ?? []).map((_, i) => i);
+    this.chart!.data.labels = data.map((_, i) => i);
     this.chart!.update();
   }
 

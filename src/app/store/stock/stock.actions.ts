@@ -8,8 +8,8 @@ export const StockActions = createActionGroup({
     'Load Detail Success': props<{ detail: StockDetail }>(),
     'Load Detail Failure': props<{ error: string }>(),
     'Live Quote Update': props<{ update: StockDetailUpdate }>(),
-    'Reset Detail': emptyProps(),
-    'Append Live Price': props<{ price: number }>(),
-    'Reset Live History': props<{ history: number[] }>()
+    'Start Live Stream': emptyProps(),
+    'Stop Live Stream': emptyProps(),
+    'Reset Detail': emptyProps()
   }
 });

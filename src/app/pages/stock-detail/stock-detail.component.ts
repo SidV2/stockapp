@@ -9,7 +9,7 @@ import { LatestHeadlinesComponent } from '../../components/latest-headlines/late
 import { StockHeroContainerComponent } from '../../components/stock-hero/stock-hero.container';
 import { StockSignalAdvisorContainerComponent } from '../../components/stock-signal-advisor/stock-signal-advisor.container';
 import { StockActions } from '../../store/stock/stock.actions';
-import { selectIsStockDetailLoading, selectLiveStock, selectStockDetailError } from '../../store/stock/stock.selectors';
+import { selectIsStockDetailLoading, selectStockDetail, selectStockDetailError } from '../../store/stock/stock.selectors';
 import { QuoteStreamService } from '../../services/quote-stream.service';
 
 @Component({
@@ -26,12 +26,12 @@ export class StockDetailComponent implements OnInit, OnDestroy {
   private readonly quoteStreamService = inject(QuoteStreamService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly detail = this.store.selectSignal(selectLiveStock);
+  readonly detail = this.store.selectSignal(selectStockDetail);
   readonly loading = this.store.selectSignal(selectIsStockDetailLoading);
   readonly error = this.store.selectSignal(selectStockDetailError);
   readonly connectionStatus = toSignal(this.quoteStreamService.getConnectionStatus(), { requireSync: true });
 
-  readonly timeframes: string[] = ['Live', '1d', '5d', '1m', '6m', '1y', '5y'];
+  readonly timeframes: string[] = ['Live', '5d', '1m', '6m', '1y', '5y'];
   readonly selectedTimeframe = signal<string>(this.timeframes[0]);
   private readonly currentSymbol = signal<string | null>(null);
 
