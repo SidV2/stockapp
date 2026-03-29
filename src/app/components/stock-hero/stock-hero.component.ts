@@ -14,7 +14,7 @@ import { SparklineComponent } from '../sparkline/sparkline.component';
   styleUrl: './stock-hero.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StockHeroComponent implements AfterViewInit {
+export class StockHeroComponent {
   readonly detail = input.required<StockDetail | undefined>();
   readonly selectedTimeframe = input.required<string>();
   readonly history = input<number[] | null | undefined>(undefined);
@@ -26,14 +26,11 @@ export class StockHeroComponent implements AfterViewInit {
   private readonly liveHistory = signal<number[]>([]);
   private readonly MAX_LIVE_HISTORY = 200;
   readonly chartWidth = signal(680);
-  private readonly resize$ = new Subject<void>();
-  private resizeObserver?: ResizeObserver;
 
   readonly animatedPrice = signal<number | undefined>(undefined);
   readonly animatedChange = signal<number | undefined>(undefined);
   readonly animatedChangePercent = signal<number | undefined>(undefined);
 
-  private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
   private priceAnimationId?: number;
   private changeAnimationId?: number;
@@ -91,16 +88,9 @@ export class StockHeroComponent implements AfterViewInit {
   });
 
   constructor() {
-    // Setup resize handler
-    this.resize$.pipe(
-      observeOn(animationFrameScheduler),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => this.updateChartWidth());
 
     // Register all cleanup in constructor
     this.destroyRef.onDestroy(() => {
-      this.resize$.complete();
-      this.resizeObserver?.disconnect();
       if (this.priceAnimationId) cancelAnimationFrame(this.priceAnimationId);
       if (this.changeAnimationId) cancelAnimationFrame(this.changeAnimationId);
       if (this.changePercentAnimationId) cancelAnimationFrame(this.changePercentAnimationId);
@@ -145,15 +135,6 @@ export class StockHeroComponent implements AfterViewInit {
         }
       }
     }, { allowSignalWrites: true });
-  }
-
-  ngAfterViewInit(): void {
-    this.updateChartWidth();
-
-    if (this.chartContainer) {
-      this.resizeObserver = new ResizeObserver(() => this.resize$.next());
-      this.resizeObserver.observe(this.chartContainer.nativeElement);
-    }
   }
 
   onTimeframeSelect(range: string): void {
@@ -225,24 +206,6 @@ export class StockHeroComponent implements AfterViewInit {
     }
   }
 
-  private updateChartWidth(): void {
-    const container = this.chartContainer?.nativeElement;
-    if (!container) return;
-
-    const computedStyle = getComputedStyle(container);
-    const paddingLeft = parseFloat(computedStyle.paddingLeft) || 24;
-    const paddingRight = parseFloat(computedStyle.paddingRight) || 24;
-    const buffer = 4;
-    
-    const width = Math.max(
-      container.offsetWidth - paddingLeft - paddingRight - buffer,
-      300
-    );
-    
-    this.chartWidth.set(width);
-    this.cdr.markForCheck();
-  }
-  
   private animateValue(
     from: number, 
     to: number, 
@@ -267,9 +230,6 @@ export class StockHeroComponent implements AfterViewInit {
       const current = from + (to - from) * easeProgress;
       
       setter(current);
-      
-      // Trigger change detection for OnPush strategy
-      this.cdr.markForCheck();
       
       if (progress < 1) {
         setId(requestAnimationFrame(animate));

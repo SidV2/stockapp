@@ -7,7 +7,7 @@
     @if (detail(); as detail) {
       <span class="breadcrumb__symbol">{{ detail.symbol }}</span>
     }
-    
+
     @if (selectedTimeframe() === 'Live') {
       <div class="connection-status" [attr.data-status]="connectionStatus()">
         <span class="status-dot"></span>
@@ -35,19 +35,15 @@
   }
 
   @if (detail(); as detail) {
-    <app-stock-hero
-      [detail]="detail"
+    <app-stock-hero-container
       [timeframes]="timeframes"
       [selectedTimeframe]="selectedTimeframe()"
-      [history]="selectedTimeframe() === 'Live' || selectedTimeframe() === '1d' ? detail.history : history()?.history"
       (timeframeChange)="setTimeframe($event)"
-    ></app-stock-hero>
+    ></app-stock-hero-container>
 
     <section class="detail__grid">
       <div class="detail__primary">
-        <app-stock-signal-advisor
-          [stockDetail]="detail"
-        ></app-stock-signal-advisor>
+        <app-stock-signal-advisor-container></app-stock-signal-advisor-container>
 
         <app-about-panel
           [company]="detail.company"

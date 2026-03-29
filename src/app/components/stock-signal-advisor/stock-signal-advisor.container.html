@@ -1,0 +1,9 @@
+@if (detail(); as detail) {
+  <app-stock-signal-advisor
+    [symbol]="detail.symbol"
+    [analysis]="aiAnalysis()"
+    [isAnalyzing]="isAiAnalyzing()"
+    [error]="aiError()"
+    (analyzeRequested)="onAnalyzeRequested()"
+  ></app-stock-signal-advisor>
+}

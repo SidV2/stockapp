@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, inject, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -17,6 +17,8 @@ type SearchSuggestion = {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SearchPanelComponent implements OnDestroy {
+  readonly symbolSelected = output<string>();
+
   readonly suggestions: SearchSuggestion[] = [
     { symbol: 'AAPL', name: 'Apple Inc.' },
     { symbol: 'MSFT', name: 'Microsoft Corp.' },
@@ -69,6 +71,7 @@ export class SearchPanelComponent implements OnDestroy {
     this.queryControl.setValue(symbol, { emitEvent: false });
     this.filteredSuggestions = this.filterSuggestions(symbol);
     this.isDropdownOpen = false;
+    this.symbolSelected.emit(symbol);
   }
 
   ngOnDestroy(): void {

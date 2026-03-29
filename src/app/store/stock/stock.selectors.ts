@@ -2,7 +2,7 @@ import { createSelector } from '@ngrx/store';
 import { stockDetailFeature } from './stock.reducer';
 import { StockDetail } from '../../models';
 
-const selectStockDetail = stockDetailFeature.selectDetail;
+export const selectStockDetail = stockDetailFeature.selectDetail;
 const selectStockLiveUpdate = stockDetailFeature.selectLiveUpdate;
 const selectStockDetailStatus = stockDetailFeature.selectStatus;
 

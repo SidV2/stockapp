@@ -1,10 +1,6 @@
-import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Store } from '@ngrx/store';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { StockDetail } from '../../models';
-import { AiAdvisorActions } from '../../store/ai-advisor/ai-advisor.actions';
-import { selectAiAdvisorViewModel } from '../../store/ai-advisor/ai-advisor.selectors';
+import { StockAnalysis } from '../../models';
 
 @Component({
   selector: 'app-stock-signal-advisor',
@@ -14,26 +10,13 @@ import { selectAiAdvisorViewModel } from '../../store/ai-advisor/ai-advisor.sele
   styleUrl: './stock-signal-advisor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StockSignalAdvisorComponent implements OnInit, OnDestroy {
-  @Input({ required: true }) stockDetail!: StockDetail;
+export class StockSignalAdvisorComponent {
+  readonly symbol = input.required<string>();
+  readonly analysis = input<StockAnalysis | null>(null);
+  readonly isAnalyzing = input<boolean>(false);
+  readonly error = input<string | null>(null);
 
-  private readonly store = inject(Store);
-
-  // Convert store observables to signals
-  private readonly viewModel = toSignal(this.store.select(selectAiAdvisorViewModel), {
-    initialValue: {
-      analysis: null,
-      symbol: null,
-      isAnalyzing: false,
-      error: null,
-      lastAnalyzedAt: null
-    }
-  });
-
-  // Expose individual signals for template
-  readonly analysis = computed(() => this.viewModel().analysis);
-  readonly isAnalyzing = computed(() => this.viewModel().isAnalyzing);
-  readonly error = computed(() => this.viewModel().error);
+  readonly analyzeRequested = output<void>();
 
   readonly signalClass = computed(() => {
     const signal = this.analysis()?.signal;
@@ -47,23 +30,8 @@ export class StockSignalAdvisorComponent implements OnInit, OnDestroy {
     return 'confidence--low';
   });
 
-
-  ngOnInit(): void {
-    this.analyzeStock();
-  }
-
-  ngOnDestroy(): void {
-    // Clean up on component destroy
-    this.store.dispatch(AiAdvisorActions.resetAnalysis());
-  }
-
   analyzeStock(): void {
-    if (!this.stockDetail) return;
-
-    // Dispatch action to trigger the effect
-    this.store.dispatch(AiAdvisorActions.analyzeStock({ 
-      stockDetail: this.stockDetail 
-    }));
+    this.analyzeRequested.emit();
   }
 
   getSignalIcon(signal: 'BUY' | 'SELL' | 'HOLD'): string {

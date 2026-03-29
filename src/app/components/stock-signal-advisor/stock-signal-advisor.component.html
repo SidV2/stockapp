@@ -67,7 +67,7 @@
         </div>
         <div class="signal-badge__content">
           <div class="signal-badge__label">{{ getSignalLabel(result.signal) }}</div>
-          <div class="signal-badge__stock">{{ stockDetail.symbol }}</div>
+          <div class="signal-badge__stock">{{ symbol() }}</div>
         </div>
         <div class="signal-badge__confidence" [ngClass]="confidenceColor()">
           <div class="confidence-value">{{ result.confidence }}%</div>

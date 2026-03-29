@@ -1,0 +1,9 @@
+@if (detail(); as detail) {
+  <app-stock-hero
+    [detail]="detail"
+    [timeframes]="timeframes()"
+    [selectedTimeframe]="selectedTimeframe()"
+    [history]="chartHistory()"
+    (timeframeChange)="onTimeframeChange($event)"
+  ></app-stock-hero>
+}
