@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -28,6 +28,8 @@ export class SearchPanelComponent implements OnDestroy {
     { symbol: 'JPM', name: 'JPMorgan Chase & Co.' }
   ];
 
+  private readonly fb = inject(FormBuilder);
+
   readonly searchForm = this.fb.nonNullable.group({
     query: ['']
   });
@@ -38,7 +40,7 @@ export class SearchPanelComponent implements OnDestroy {
   private dropdownTimeout?: ReturnType<typeof setTimeout>;
   private readonly destroy$ = new Subject<void>();
 
-  constructor(private readonly fb: FormBuilder) {
+  constructor() {
     this.queryControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(value => {
       this.filteredSuggestions = this.filterSuggestions(value);
       this.isDropdownOpen = this.filteredSuggestions.length > 0 && value.trim().length > 0;

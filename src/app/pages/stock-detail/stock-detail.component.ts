@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectionStrategy, DestroyRef, computed, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -25,6 +25,11 @@ import { QuoteStreamService } from '../../services/quote-stream.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StockDetailComponent {
+  private readonly store = inject(Store);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly quoteStreamService = inject(QuoteStreamService);
+
   // Convert observables to signals for better performance and readability
   readonly detail = toSignal(this.store.select(selectLiveStock));
   readonly loading = toSignal(this.store.select(selectIsStockDetailLoading), { initialValue: false });
@@ -37,12 +42,7 @@ export class StockDetailComponent {
   readonly selectedTimeframe = signal<string>(this.timeframes[0]);
   private readonly currentSymbol = signal<string | null>(null);
 
-  constructor(
-    private readonly store: Store,
-    private readonly route: ActivatedRoute,
-    private readonly destroyRef: DestroyRef,
-    private readonly quoteStreamService: QuoteStreamService
-  ) {
+  constructor() {
     // Handle route parameter changes
     this.route.paramMap.pipe(
       map(params => params.get('symbol')),

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef, computed, effect, input, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 
 interface Point {
   x: number;
@@ -27,17 +27,15 @@ export class SparklineComponent {
   readonly path = signal<string>('');
   
   // Track animation state
+  private readonly destroyRef = inject(DestroyRef);
   private animationId?: number;
   private previousPoints: Point[] = [];
   private targetPoints: Point[] = [];
-  
+
   // Computed signal for target path generation
   private readonly targetPath = computed(() => this.generatePath());
 
-  constructor(
-    private readonly cdr: ChangeDetectorRef,
-    private readonly destroyRef: DestroyRef
-  ) {
+  constructor() {
     // Watch for changes in target path and animate
     effect(() => {
       const newPath = this.targetPath();
@@ -122,7 +120,6 @@ export class SparklineComponent {
       this.previousPoints = newPoints;
       this.targetPoints = newPoints;
       this.path.set(this.pointsToPath(newPoints));
-      this.cdr.markForCheck();
       return;
     }
     
@@ -149,9 +146,6 @@ export class SparklineComponent {
       
       // Generate and set path
       this.path.set(this.pointsToPath(interpolatedPoints));
-      
-      // Trigger change detection for OnPush strategy
-      this.cdr.markForCheck();
       
       if (progress < 1) {
         this.animationId = requestAnimationFrame(animate);

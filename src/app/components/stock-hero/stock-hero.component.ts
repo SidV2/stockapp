@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, DestroyRef, effect, ElementRef, input, output, signal, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, DestroyRef, effect, ElementRef, inject, input, output, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { animationFrameScheduler, Subject } from 'rxjs';
 import { observeOn } from 'rxjs/operators';
@@ -33,6 +33,8 @@ export class StockHeroComponent implements AfterViewInit {
   readonly animatedChange = signal<number | undefined>(undefined);
   readonly animatedChangePercent = signal<number | undefined>(undefined);
 
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
   private priceAnimationId?: number;
   private changeAnimationId?: number;
   private changePercentAnimationId?: number;
@@ -88,10 +90,7 @@ export class StockHeroComponent implements AfterViewInit {
     return this.history() ?? undefined;
   });
 
-  constructor(
-    private readonly cdr: ChangeDetectorRef,
-    private readonly destroyRef: DestroyRef
-  ) {
+  constructor() {
     // Setup resize handler
     this.resize$.pipe(
       observeOn(animationFrameScheduler),

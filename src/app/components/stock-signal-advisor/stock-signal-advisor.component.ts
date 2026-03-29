@@ -1,8 +1,8 @@
-import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { StockAnalysis, StockDetail } from '../../models';
+import { StockDetail } from '../../models';
 import { AiAdvisorActions } from '../../store/ai-advisor/ai-advisor.actions';
 import { selectAiAdvisorViewModel } from '../../store/ai-advisor/ai-advisor.selectors';
 
@@ -16,6 +16,8 @@ import { selectAiAdvisorViewModel } from '../../store/ai-advisor/ai-advisor.sele
 })
 export class StockSignalAdvisorComponent implements OnInit, OnDestroy {
   @Input({ required: true }) stockDetail!: StockDetail;
+
+  private readonly store = inject(Store);
 
   // Convert store observables to signals
   private readonly viewModel = toSignal(this.store.select(selectAiAdvisorViewModel), {
@@ -45,7 +47,6 @@ export class StockSignalAdvisorComponent implements OnInit, OnDestroy {
     return 'confidence--low';
   });
 
-  constructor(private store: Store) {}
 
   ngOnInit(): void {
     this.analyzeStock();
