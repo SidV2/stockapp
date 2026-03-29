@@ -33,13 +33,6 @@
             <span class="pick-card__badge" [attr.data-level]="pick.riskLevel">{{ pick.riskLevel }}</span>
           </header>
           <p class="pick-card__summary">{{ pick.summary }}</p>
-          <div class="pick-card__spark">
-            <app-sparkline
-              [values]="pick.sparkline"
-              [stroke]="pick.trend === 'up' ? '#16a34a' : '#dc2626'"
-              [height]="48"
-            ></app-sparkline>
-          </div>
           <footer class="pick-card__disclaimer">Not investment advice.</footer>
         </article>
       }
