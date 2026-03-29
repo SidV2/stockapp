@@ -14,7 +14,6 @@ import { selectIsStockDetailLoading, selectLiveStock, selectStockDetailError } f
 import { StockHistoryActions } from '../../store/stock-history/stock-history.actions';
 import { selectStockHistory } from '../../store/stock-history/stock-history.selectors';
 import { QuoteStreamService } from '../../services/quote-stream.service';
-
 @Component({
   selector: 'app-stock-detail',
   standalone: true,

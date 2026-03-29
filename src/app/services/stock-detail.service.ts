@@ -12,7 +12,7 @@ import { normalizeStockSymbol } from '../utils/stock.utils';
  * and return an observable that emits the fully-hydrated detail object your
  * components expect. The store/effects layer already calls this method.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class StockDetailService {
 
   /**

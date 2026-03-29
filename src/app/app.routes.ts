@@ -6,6 +6,7 @@ import { topPicksFeatureName, topPicksReducer } from './store/top-picks/top-pick
 import { TopPicksEffects } from './store/top-picks/top-picks.effects';
 import { stockDetailFeatureName, stockDetailReducer } from './store/stock/stock.reducer';
 import { StockEffects } from './store/stock/stock.effects';
+import { StockDetailService } from './services/stock-detail.service';
 import { stockHistoryFeatureName, stockHistoryReducer } from './store/stock-history/stock-history.reducer';
 import { StockHistoryEffects } from './store/stock-history/stock-history.effects';
 import { aiAdvisorFeatureName, aiAdvisorReducer } from './store/ai-advisor/ai-advisor.reducer';
@@ -27,6 +28,7 @@ export const routes: Routes = [
       provideState(stockDetailFeatureName, stockDetailReducer),
       provideState(stockHistoryFeatureName, stockHistoryReducer),
       provideState(aiAdvisorFeatureName, aiAdvisorReducer),
+      StockDetailService,
       provideEffects(StockEffects, StockHistoryEffects, AiAdvisorEffects)
     ]
   },
