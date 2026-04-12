@@ -7,7 +7,7 @@ const selectAiStatus = aiAdvisorFeature.selectStatus;
 const selectAiError = aiAdvisorFeature.selectError;
 const selectLastAnalyzedAt = aiAdvisorFeature.selectLastAnalyzedAt;
 
-const selectIsAiAnalyzing = createSelector(
+export const selectIsAiAnalyzing = createSelector(
   selectAiStatus,
   (status) => status === 'loading'
 );

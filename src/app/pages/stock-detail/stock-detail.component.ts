@@ -11,6 +11,7 @@ import { StockSignalAdvisorContainerComponent } from '../../components/stock-sig
 import { StockActions } from '../../store/stock/stock.actions';
 import { selectIsStockDetailLoading, selectStockDetail, selectStockDetailError } from '../../store/stock/stock.selectors';
 import { QuoteStreamService } from '../../services/quote-stream.service';
+import { CanDeactivateComponent } from '../../guards/stock-detail.guard';
 
 @Component({
   selector: 'app-stock-detail',
@@ -20,7 +21,7 @@ import { QuoteStreamService } from '../../services/quote-stream.service';
   styleUrl: './stock-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StockDetailComponent implements OnInit, OnDestroy {
+export class StockDetailComponent implements OnInit, OnDestroy, CanDeactivateComponent {
   private readonly store = inject(Store);
   private readonly route = inject(ActivatedRoute);
   private readonly quoteStreamService = inject(QuoteStreamService);
@@ -47,6 +48,13 @@ export class StockDetailComponent implements OnInit, OnDestroy {
         this.store.dispatch(StockActions.loadDetail({ symbol: upperSymbol }));
       }
     });
+  }
+
+  canDeactivate(): boolean {
+    if (this.selectedTimeframe() === 'Live') {
+      return confirm('Live stream is active. Leave and disconnect?');
+    }
+    return true;
   }
 
   reload(): void {

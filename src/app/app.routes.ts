@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { stockDetailCanDeactivate } from './guards/stock-detail.guard';
 import { provideEffects } from '@ngrx/effects';
 import { provideState } from '@ngrx/store';
 import { HomeComponent } from './pages/home/home.component';
@@ -24,6 +25,7 @@ export const routes: Routes = [
   {
     path: 'stocks/:symbol',
     loadComponent: () => import('./pages/stock-detail/stock-detail.component').then(m => m.StockDetailComponent),
+    canDeactivate: [stockDetailCanDeactivate],
     providers: [
       provideState(stockDetailFeatureName, stockDetailReducer),
       provideState(stockHistoryFeatureName, stockHistoryReducer),
