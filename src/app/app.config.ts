@@ -1,4 +1,5 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { apiBaseUrlInterceptor, timingInterceptor } from './interceptors/api-base-url.interceptor';
 import { ApplicationConfig, isDevMode, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideRouterStore } from '@ngrx/router-store';
@@ -17,6 +18,6 @@ export const appConfig: ApplicationConfig = {
       maxAge: 25,
       logOnly: !isDevMode()
     }),
-    provideHttpClient()
+    provideHttpClient(withInterceptors([apiBaseUrlInterceptor, timingInterceptor]))
   ]
 };

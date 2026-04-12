@@ -2,7 +2,6 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { StockDetail } from '../models';
 import { HttpClient } from '@angular/common/http';
-import { stockDetailEndpoint } from '../../constants/api.constants';
 import { normalizeStockSymbol } from '../utils/stock.utils';
 
 /**
@@ -27,6 +26,6 @@ export class StockDetailService {
    */
   getStockDetail(symbol: string): Observable<StockDetail> {
     const normalized = normalizeStockSymbol(symbol);
-    return this.httpClient.get<StockDetail>(`${stockDetailEndpoint}/${normalized}/detail`);
+    return this.httpClient.get<StockDetail>(`/api/stocks/${normalized}/detail`);
   }
 }
