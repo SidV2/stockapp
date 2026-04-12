@@ -4,7 +4,7 @@
 
 .advisor {
   background: rgba(255, 255, 255, 0.96);
-  border-radius: 24px;
+  border-radius: 1.5rem;
   padding: 1.8rem 2rem;
   border: 1px solid rgba(148, 163, 184, 0.16);
   box-shadow: 0 22px 50px rgba(15, 23, 42, 0.12);
@@ -34,23 +34,22 @@
   display: inline-block;
 }
 
-.advisor__refresh {
-  background: rgba(15, 23, 42, 0.08);
-  border: none;
-  border-radius: 999px;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.advisor__retry {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #64748b;
   cursor: pointer;
-  color: #0f172a;
-  font-size: 1.3rem;
   transition: all 0.18s ease;
 
   &:hover:not(:disabled) {
-    background: rgba(15, 23, 42, 0.12);
-    transform: rotate(90deg);
+    background: rgba(15, 23, 42, 0.05);
+    color: #0f172a;
+    border-color: rgba(148, 163, 184, 0.6);
   }
 
   &:disabled {
@@ -59,18 +58,6 @@
   }
 }
 
-.spinning {
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 // Shimmer Loading State
 .advisor__shimmer {
@@ -87,14 +74,14 @@
   align-items: center;
   background: rgba(248, 250, 252, 0.65);
   padding: 1.5rem;
-  border-radius: 18px;
+  border-radius: 1.125rem;
   border: 2px solid rgba(226, 232, 240, 0.8);
 }
 
 .shimmer-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 0.75rem;
   background: linear-gradient(90deg, 
     rgba(226, 232, 240, 0.4) 0%, 
     rgba(226, 232, 240, 0.8) 50%, 
@@ -109,8 +96,8 @@
 }
 
 .shimmer-line {
-  height: 16px;
-  border-radius: 8px;
+  height: 1rem;
+  border-radius: 0.5rem;
   background: linear-gradient(90deg, 
     rgba(226, 232, 240, 0.4) 0%, 
     rgba(226, 232, 240, 0.8) 50%, 
@@ -118,25 +105,25 @@
   background-size: 200% 100%;
 
   &--title {
-    height: 12px;
-    width: 120px;
+    height: 0.75rem;
+    width: 7.5rem;
     margin-bottom: 0.5rem;
   }
 
   &--large {
-    height: 22px;
-    width: 140px;
+    height: 1.375rem;
+    width: 8.75rem;
   }
 
   &--medium {
-    height: 14px;
+    height: 0.875rem;
     width: 100%;
-    max-width: 400px;
+    max-width: 25rem;
   }
 
   &--small {
-    height: 12px;
-    width: 80px;
+    height: 0.75rem;
+    width: 5rem;
   }
 
   &--short {
@@ -145,9 +132,9 @@
 }
 
 .shimmer-confidence {
-  width: 80px;
-  height: 70px;
-  border-radius: 12px;
+  width: 5rem;
+  height: 4.375rem;
+  border-radius: 0.75rem;
   background: linear-gradient(90deg, 
     rgba(226, 232, 240, 0.4) 0%, 
     rgba(226, 232, 240, 0.8) 50%, 
@@ -162,8 +149,8 @@
 }
 
 .shimmer-factor {
-  height: 45px;
-  border-radius: 12px;
+  height: 2.8125rem;
+  border-radius: 0.75rem;
   background: linear-gradient(90deg, 
     rgba(226, 232, 240, 0.4) 0%, 
     rgba(226, 232, 240, 0.8) 50%, 
@@ -173,13 +160,13 @@
 
 .shimmer-meta {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
   gap: 0.75rem;
 }
 
 .shimmer-meta-item {
-  height: 65px;
-  border-radius: 12px;
+  height: 4.0625rem;
+  border-radius: 0.75rem;
   background: linear-gradient(90deg, 
     rgba(226, 232, 240, 0.4) 0%, 
     rgba(226, 232, 240, 0.8) 50%, 
@@ -216,7 +203,7 @@
   text-align: center;
   padding: 2.5rem 1.5rem;
   background: linear-gradient(135deg, rgba(220, 38, 38, 0.03) 0%, rgba(220, 38, 38, 0.08) 100%);
-  border-radius: 18px;
+  border-radius: 1.125rem;
   border: 2px solid rgba(220, 38, 38, 0.2);
   animation: fadeIn 0.3s ease-out;
 
@@ -233,7 +220,7 @@
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
-    border-radius: 12px;
+    border-radius: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.18s ease;
@@ -259,7 +246,7 @@
   align-items: center;
   background: rgba(248, 250, 252, 0.65);
   padding: 1.5rem;
-  border-radius: 18px;
+  border-radius: 1.125rem;
   border: 2px solid rgba(226, 232, 240, 0.8);
   transition: all 0.18s ease;
 
@@ -321,7 +308,7 @@
 .signal-badge__confidence {
   text-align: center;
   padding: 0.75rem 1rem;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   background: rgba(15, 23, 42, 0.06);
   border: 1px solid rgba(148, 163, 184, 0.2);
 
@@ -397,7 +384,7 @@
   color: #475569;
   padding: 0.75rem 1rem;
   background: rgba(248, 250, 252, 0.65);
-  border-radius: 12px;
+  border-radius: 0.75rem;
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
@@ -410,7 +397,7 @@
 
 .advisor__meta {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
   gap: 0.75rem;
 }
 
@@ -420,7 +407,7 @@
   gap: 0.35rem;
   background: rgba(248, 250, 252, 0.65);
   padding: 1rem;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
@@ -462,7 +449,7 @@
 .advisor__disclaimer {
   background: rgba(245, 158, 11, 0.08);
   padding: 1rem 1.2rem;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   border: 1px solid rgba(245, 158, 11, 0.2);
   border-left: 3px solid #f59e0b;
 
@@ -501,12 +488,12 @@
   .shimmer-confidence {
     grid-column: 1 / -1;
     width: 100%;
-    height: 60px;
+    height: 3.75rem;
   }
 
   .shimmer-icon {
-    width: 50px;
-    height: 50px;
+    width: 3.125rem;
+    height: 3.125rem;
   }
 }
 
@@ -520,12 +507,6 @@
   }
 
   .advisor__title {
-    font-size: 1.1rem;
-  }
-
-  .advisor__refresh {
-    width: 32px;
-    height: 32px;
     font-size: 1.1rem;
   }
 

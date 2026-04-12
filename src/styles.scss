@@ -1,4 +1,9 @@
 /* Global base styles */
+/* Base: 1rem = 16px. All spacing, typography and layout values use rem. */
+html {
+  font-size: 16px;
+}
+
 html, body {
   margin: 0;
   padding: 0;

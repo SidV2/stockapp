@@ -5,12 +5,12 @@
     </h2>
     <button 
       type="button" 
-      class="advisor__refresh"
+      class="advisor__retry"
       (click)="analyzeStock()"
       [disabled]="isAnalyzing()"
       title="Refresh analysis"
     >
-      <span [class.spinning]="isAnalyzing()">↻</span>
+      Retry
     </button>
   </div>
 

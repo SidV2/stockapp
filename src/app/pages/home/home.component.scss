@@ -1,6 +1,6 @@
 :host {
   display: block;
-  --home-header-height: 82px;
+  --home-header-height: 5.125rem;
 }
 
 .surface {
@@ -26,9 +26,9 @@
 }
 
 .shell {
-  max-width: 1180px;
+  max-width: 73.75rem;
   margin: 0 auto;
-  width: min(100%, 1180px);
+  width: min(100%, 73.75rem);
 }
 
 
@@ -40,12 +40,12 @@
 }
 
 .layout > :first-child {
-  flex: 2 1 520px;
+  flex: 2 1 32.5rem;
   min-width: 0;
 }
 
 .layout > :last-child {
-  flex: 1 1 320px;
+  flex: 1 1 20rem;
   min-width: 0;
 }
 
@@ -64,7 +64,7 @@
 
 @media (max-width: 720px) {
   :host {
-    --home-header-height: 72px;
+    --home-header-height: 4.5rem;
   }
 
   .surface {
@@ -78,7 +78,7 @@
 
 @media (max-width: 540px) {
   :host {
-    --home-header-height: 66px;
+    --home-header-height: 4.125rem;
   }
 
   .surface {
